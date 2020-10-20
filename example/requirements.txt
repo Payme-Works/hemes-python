@@ -1,7 +1,7 @@
 astroid==2.4.2
 certifi==2020.6.20
 chardet==3.0.4
-hermes @ git+git://github.com/PaymeTrade/hermes.git@063c8812f2cc3aaa5cfdda6ff2a026ed2d9ce867
+hermes @ git+git://github.com/PaymeTrade/hermes.git@fcc3d08299c2a7cffbb947648b8906ae1fd11465
 idna==2.10
 isort==5.6.4
 lazy-object-proxy==1.4.3
@@ -14,3 +14,4 @@ toml==0.10.1
 urllib3==1.25.11
 websocket-client==0.56.0
 wrapt==1.12.1
+xmpppy==0.6.1
