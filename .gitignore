@@ -1,0 +1,9 @@
+*.py[cod]
+build/
+dist/
+*.egg-info/
+.vscode/
+/.vs
+venv/
+.idea
+test.py
