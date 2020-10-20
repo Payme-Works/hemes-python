@@ -209,7 +209,7 @@ class StableHermes:
         for dirr in (["binary", "turbo"]):
             for i in init_info["result"][dirr]["actives"]:
                 OP_code.ACTIVES[(init_info["result"][dirr]
-                ["actives"][i]["name"]).split(".")[1]] = int(i)
+                                 ["actives"][i]["name"]).split(".")[1]] = int(i)
 
     # _________________________self.api.get_api_option_init_all() wss______________________
     def get_all_init(self):
@@ -326,24 +326,24 @@ class StableHermes:
             name = init_info["result"]["turbo"]["actives"][actives]["name"]
             name = name[name.index(".") + 1:len(name)]
             all_profit[name]["turbo"] = (
-                                            100.0 -
-                                            init_info["result"]["turbo"]["actives"][actives]["option"]["profit"][
-                                                "commission"]) / 100.0
+                100.0 -
+                init_info["result"]["turbo"]["actives"][actives]["option"]["profit"][
+                    "commission"]) / 100.0
 
         for actives in init_info["result"]["binary"]["actives"]:
             name = init_info["result"]["binary"]["actives"][actives]["name"]
             name = name[name.index(".") + 1:len(name)]
             all_profit[name]["binary"] = (
-                                             100.0 -
-                                             init_info["result"]["binary"]["actives"][actives]["option"]["profit"][
-                                                 "commission"]) / 100.0
+                100.0 -
+                init_info["result"]["binary"]["actives"][actives]["option"]["profit"][
+                    "commission"]) / 100.0
         return all_profit
 
     # ----------------------------------------
 
     # ______________________________________self.api.getprofile() https________________________________
 
-    def get_profile_ansyc(self):
+    def get_profile_async(self):
         while self.api.profile.msg == None:
             pass
         return self.api.profile.msg
@@ -399,7 +399,7 @@ class StableHermes:
 
     def get_balance_mode(self):
         # self.api.profile.balance_type=None
-        profile = self.get_profile_ansyc()
+        profile = self.get_profile_async()
         for balance in profile.get("balances"):
             if balance["id"] == global_value.balance_id:
                 if balance["type"] == 1:
@@ -445,7 +445,7 @@ class StableHermes:
         practice_id = None
         tournament_id = None
 
-        for balance in self.get_profile_ansyc()["balances"]:
+        for balance in self.get_profile_async()["balances"]:
             if balance["type"] == 1:
                 real_id = balance["id"]
             if balance["type"] == 4:
@@ -753,7 +753,7 @@ class StableHermes:
         while True:
             result = self.get_optioninfo_v2(10)
             if result['msg']['closed_options'][0]['id'][0] == id_number and result['msg']['closed_options'][0]['id'][
-                0] is not None:
+                    0] is not None:
                 return result['msg']['closed_options'][0]['win'], (
                     result['msg']['closed_options'][0]['win_amount'] - result['msg']['closed_options'][0]['amount'] if
                     result['msg']['closed_options'][0]['win'] != 'equal' else 0)
@@ -1076,7 +1076,7 @@ class StableHermes:
                      position['raw_event']["sell_amount"])
         start_duration = position["instrument_id"].find("PT") + 2
         end_duration = start_duration + \
-                       position["instrument_id"][start_duration:].find("M")
+            position["instrument_id"][start_duration:].find("M")
 
         duration = int(position["instrument_id"][start_duration:end_duration])
         z2 = False

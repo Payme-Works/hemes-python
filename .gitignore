@@ -1,9 +1,17 @@
-*.py[cod]
+# app
 build/
 dist/
-*.egg-info/
-.vscode/
-/.vs
 venv/
+env/
+
+# env
+.env
+
+# ide
 .idea
-test.py
+/.vs
+.vscode/
+
+# misc
+*.py[cod]
+*.egg-info/
