@@ -22,26 +22,28 @@ class TestBinaryOption(unittest.TestCase):
         all_asset = i_want_money.get_all_open_time()
 
         if all_asset["turbo"]["EURUSD"]["open"]:
-            actives = "EURUSD"
+            active = "EURUSD"
         else:
-            actives = "EURUSD-OTC"
+            active = "EURUSD-OTC"
 
-        money = 1
-        action_call = "call"
-        expirations_mode = 1
-
-        check_call, id_call = i_want_money.buy(
-            money, actives, action_call, expirations_mode)
+        check_call, id_call = i_want_money.buy({
+            "price_amount": 1,
+            "active": active,
+            "action": "call",
+            "expiration": 1
+        })
 
         self.assertTrue(check_call)
         self.assertTrue(type(id_call) is int)
 
         i_want_money.sell_option(id_call)
 
-        action_call = "put"
-
-        check_put, id_put = i_want_money.buy(
-            money, actives, action_call, expirations_mode)
+        check_put, id_put = i_want_money.buy({
+            "price_amount": 1,
+            "active": active,
+            "action": "put",
+            "expiration": 1
+        })
 
         self.assertTrue(check_put)
         self.assertTrue(type(id_put) is int)
