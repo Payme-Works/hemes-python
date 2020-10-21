@@ -881,8 +881,8 @@ class StableHermes:
 
         return self.api.result, self.api.buy_multi_option[req_id]["id"]
 
-    def sell_option(self, options_ids):
-        self.api.sell_option(options_ids)
+    def sell_option(self, options_id):
+        self.api.sell_option(options_id)
         self.api.sold_options_respond = None
 
         while self.api.sold_options_respond is None:
@@ -890,8 +890,8 @@ class StableHermes:
 
         return self.api.sold_options_respond
 
-    def sell_digital_option(self, options_ids):
-        self.api.sell_digital_option(options_ids)
+    def sell_digital_option(self, options_id):
+        self.api.sell_digital_option(options_id)
         self.api.sold_digital_options_respond = None
 
         while self.api.sold_digital_options_respond is None:
@@ -996,7 +996,6 @@ class StableHermes:
     def buy_digital_spot(self, active, amount, action, duration):
         # Expiration time need to be formatted like this: YYYYMMDDHHII
         # And need to be on GMT time
-
         if action == 'put':
             action = 'P'
         elif action == 'call':

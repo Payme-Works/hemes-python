@@ -4,6 +4,7 @@ import requests
 import ssl
 import atexit
 from collections import deque
+
 from hermes.http.login import Login
 from hermes.http.loginv2 import LoginV2
 from hermes.http.logout import Logout
@@ -55,7 +56,7 @@ from hermes.ws.objects.timesync import TimeSync
 from hermes.ws.objects.profile import Profile
 from hermes.ws.objects.candles import Candles
 from hermes.ws.objects.listinfodata import ListInfoData
-from hermes.ws.objects.betinfo import Game_betinfo_data
+from hermes.ws.objects.betinfo import GameBetInfoData
 import hermes.global_value as global_value
 from collections import defaultdict
 
@@ -90,7 +91,7 @@ class Hermes(object):
 
     order_async = nested_dict(2, dict)
     order_binary = {}
-    game_betinfo = Game_betinfo_data()
+    game_betinfo = GameBetInfoData()
     instruments = None
     financial_information = None
     buy_id = None
@@ -493,7 +494,7 @@ class Hermes(object):
         self.send_websocket_request(name="sendMessage", msg=msg, request_id=str(request_id))
 
     def subscribe_position_changed(self, name, instrument_type, request_id):
-        # name: position-changed, trading-fx-option.position-changed, digital-options.position-changed
+        # name: position-changed, trading-fx-option.position-changed, digital-options
         # instrument_type: multi-option, crypto, forex, cfd
         msg = {
             "name": name,
