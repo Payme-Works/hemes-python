@@ -4,7 +4,7 @@ from hermes.http.resource import Resource
 from hermes.http.profile import Profile
 
 
-class Changebalance(Resource):
+class ChangeBalance(Resource):
     """Class for IQ Option changebalance resource."""
     # pylint: disable=too-few-public-methods
 

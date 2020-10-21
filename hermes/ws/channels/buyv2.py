@@ -4,7 +4,7 @@ from hermes.ws.channels.base import Base
 from hermes.expiration import get_expiration_time
 
 
-class Buyv2(Base):
+class BuyV2(Base):
     """Class for IQ Option buy websocket channel."""
     # pylint: disable=too-few-public-methods
 
@@ -18,7 +18,7 @@ class Buyv2(Base):
         """
 
         exp, idx = get_expiration_time(
-            int(self.api.timesync.server_timestamp), duration)
+            int(self.api.time_sync.server_timestamp), duration)
 
         if idx < 5:
             option = 3  # turbo
@@ -32,7 +32,7 @@ class Buyv2(Base):
             "type": option,
             "direction": direction.lower(),
             "user_balance_id": int(global_value.balance_id),
-            "time": self.api.timesync.server_timestamp
+            "time": self.api.time_sync.server_timestamp
         }
 
         self.send_websocket_request(self.name, data)

@@ -2,7 +2,7 @@ from hermes.ws.channels.base import Base
 import time
 
 
-class Sell_Digital_Option(Base):
+class SellDigitalOption(Base):
     name = "sendMessage"
 
     def __call__(self, position_ids):

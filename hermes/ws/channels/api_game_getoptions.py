@@ -2,7 +2,7 @@ from hermes.ws.channels.base import Base
 import hermes.global_value as global_value
 
 
-class Get_options(Base):
+class GetOptions(Base):
     name = "api_game_getoptions"
 
     def __call__(self, limit):
@@ -15,7 +15,7 @@ class Get_options(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Get_options_v2(Base):
+class GetOptionsV2(Base):
     name = "sendMessage"
 
     def __call__(self, limit, instrument_type):

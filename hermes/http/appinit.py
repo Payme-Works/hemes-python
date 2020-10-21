@@ -1,7 +1,7 @@
 from hermes.http.resource import Resource
 
 
-class Appinit(Resource):
+class AppInit(Resource):
     """Class for IQ Option login resource."""
     # pylint: disable=too-few-public-methods
 

@@ -2,7 +2,7 @@ from hermes.ws.channels.base import Base
 import logging
 
 
-class Game_betinfo(Base):
+class GameBetInfo(Base):
     name = "api_game_betinfo"
 
     def __call__(self, id_number_list):

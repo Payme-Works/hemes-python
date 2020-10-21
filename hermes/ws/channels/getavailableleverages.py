@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Get_available_leverages(Base):
+class GetAvailableLeverages(Base):
     name = "sendMessage"
 
     def __call__(self, instrument_type, actives):

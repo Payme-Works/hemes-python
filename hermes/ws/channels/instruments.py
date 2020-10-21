@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Get_instruments(Base):
+class GetInstruments(Base):
     """Class for IQ Option buy websocket channel."""
     # pylint: disable=too-few-public-methods
 

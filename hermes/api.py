@@ -1,64 +1,56 @@
-import time
 import json
-import logging
 import threading
 import requests
 import ssl
 import atexit
 from collections import deque
 from hermes.http.login import Login
-from hermes.http.loginv2 import Loginv2
+from hermes.http.loginv2 import LoginV2
 from hermes.http.logout import Logout
 from hermes.http.login2fa import Login2FA
-from hermes.http.send_sms import SMS_Sender
+from hermes.http.send_sms import SMSSender
 from hermes.http.verify import Verify
-from hermes.http.getprofile import Getprofile
+from hermes.http.getprofile import GetProfile
 from hermes.http.auth import Auth
 from hermes.http.token import Token
-from hermes.http.appinit import Appinit
+from hermes.http.appinit import AppInit
 from hermes.http.billing import Billing
 from hermes.http.buyback import Buyback
-from hermes.http.changebalance import Changebalance
+from hermes.http.changebalance import ChangeBalance
 from hermes.http.events import Events
 from hermes.ws.client import WebsocketClient
-from hermes.ws.channels.get_balances import *
-
-from hermes.ws.channels.ssid import Ssid
+from hermes.ws.channels.getbalances import *
+from hermes.ws.channels.ssid import SSID
 from hermes.ws.channels.subscribe import *
 from hermes.ws.channels.unsubscribe import *
 from hermes.ws.channels.setactives import SetActives
 from hermes.ws.channels.candles import GetCandles
-from hermes.ws.channels.buyv2 import Buyv2
+from hermes.ws.channels.buyv2 import BuyV2
 from hermes.ws.channels.buyv3 import *
 from hermes.ws.channels.user import *
-from hermes.ws.channels.api_game_betinfo import Game_betinfo
-from hermes.ws.channels.instruments import Get_instruments
+from hermes.ws.channels.api_game_betinfo import GameBetInfo
+from hermes.ws.channels.instruments import GetInstruments
 from hermes.ws.channels.get_financial_information import GetFinancialInformation
-from hermes.ws.channels.strike_list import Strike_list
-from hermes.ws.channels.leaderboard import Leader_Board
-
-from hermes.ws.channels.traders_mood import Traders_mood_subscribe
-from hermes.ws.channels.traders_mood import Traders_mood_unsubscribe
-from hermes.ws.channels.technical_indicators import Technical_indicators
-from hermes.ws.channels.buy_place_order_temp import Buy_place_order_temp
-from hermes.ws.channels.get_order import Get_order
+from hermes.ws.channels.strikelist import StrikeList
+from hermes.ws.channels.leaderboard import LeaderBoard
+from hermes.ws.channels.traders_mood import TradersMoodSubscribe
+from hermes.ws.channels.traders_mood import TradersMoodUnsubscribe
+from hermes.ws.channels.technicalindicators import TechnicalIndicators
+from hermes.ws.channels.buyplaceordertemp import BuyPlaceOrderTemp
+from hermes.ws.channels.getorder import GetOrder
 from hermes.ws.channels.get_deferred_orders import GetDeferredOrders
-from hermes.ws.channels.get_positions import *
-
-from hermes.ws.channels.get_available_leverages import Get_available_leverages
-from hermes.ws.channels.cancel_order import Cancel_order
-from hermes.ws.channels.close_position import Close_position
-from hermes.ws.channels.get_overnight_fee import Get_overnight_fee
+from hermes.ws.channels.getpositions import *
+from hermes.ws.channels.getavailableleverages import GetAvailableLeverages
+from hermes.ws.channels.cancelorder import CancelOrder
+from hermes.ws.channels.closeposition import ClosePosition
+from hermes.ws.channels.getovernightfee import GetOvernightFee
 from hermes.ws.channels.heartbeat import Heartbeat
-
-
 from hermes.ws.channels.digital_option import *
 from hermes.ws.channels.api_game_getoptions import *
-from hermes.ws.channels.sell_option import Sell_Option
-from hermes.ws.channels.sell_digital_option import Sell_Digital_Option
-from hermes.ws.channels.change_tpsl import Change_Tpsl
+from hermes.ws.channels.selloption import SellOption
+from hermes.ws.channels.selldigitaloption import SellDigitalOption
+from hermes.ws.channels.changetpsl import ChangeTPSL
 from hermes.ws.channels.change_auto_margin_call import ChangeAutoMarginCall
-
 from hermes.ws.objects.timesync import TimeSync
 from hermes.ws.objects.profile import Profile
 from hermes.ws.objects.candles import Candles
@@ -75,23 +67,19 @@ def nested_dict(n, type):
         return defaultdict(lambda: nested_dict(n-1, type))
 
 
-# InsecureRequestWarning: Unverified HTTPS request is being made.
-# Adding certificate verification is strongly advised.
-# See: https://urllib3.readthedocs.org/en/latest/security.html
-requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
+requests.packages.urllib3.disable_warnings()
 
 
-class Hermes(object):  # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-public-methods
+class Hermes(object):
     socket_option_opened = {}
     socket_option_closed = {}
-    timesync = TimeSync()
+    time_sync = TimeSync()
     profile = Profile()
     candles = Candles()
-    listinfodata = ListInfoData()
+    list_info_data = ListInfoData()
     api_option_init_all_result = []
     api_option_init_all_result_v2 = []
-    # for digital
+
     underlying_list_data = None
     position_changed = None
     instrument_quites_generated_data = nested_dict(2, dict)
@@ -99,8 +87,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     instrument_quites_generated_timestamp = nested_dict(2, dict)
     strike_list = None
     leaderboard_deals_client = None
-    #position_changed_data = nested_dict(2, dict)
-    # microserviceName_binary_options_name_option=nested_dict(2,dict)
+
     order_async = nested_dict(2, dict)
     order_binary = {}
     game_betinfo = Game_betinfo_data()
@@ -108,7 +95,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     financial_information = None
     buy_id = None
     buy_order_id = None
-    traders_mood = {}  # get hight(put) %
+    traders_mood = {}
     technical_indicators = {}
     order_data = None
     positions = None
@@ -120,34 +107,33 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     order_canceled = None
     close_position_data = None
     overnight_fee = None
-    # ---for real time
+
     digital_option_placed_id = {}
     live_deal_data = nested_dict(3, deque)
 
     subscribe_commission_changed_data = nested_dict(2, dict)
     real_time_candles = nested_dict(3, dict)
-    real_time_candles_maxdict_table = nested_dict(2, dict)
+    real_time_candles_max_dict_table = nested_dict(2, dict)
     candle_generated_check = nested_dict(2, dict)
     candle_generated_all_size_check = nested_dict(1, dict)
-    # ---for api_game_getoptions_result
-    api_game_getoptions_result = None
+
+    api_game_get_options_result = None
     sold_options_respond = None
     sold_digital_options_respond = None
     tpsl_changed_respond = None
     auto_margin_call_changed_respond = None
     top_assets_updated_data = {}
     get_options_v2_data = None
-    # --for binary option multi buy
+
     buy_multi_result = None
     buy_multi_option = {}
-    #
+
     result = None
     training_balance_reset_request = None
     balances_raw = None
     user_profile_client = None
     leaderboard_userinfo_deals_client = None
     users_availability = None
-    # ------------------
 
     def __init__(self, host, username, password, proxies=None):
         """
@@ -167,12 +153,9 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         self.token_login2fa = None
         self.token_sms = None
         self.proxies = proxies
-        # is used to determine if a buyOrder was set  or failed. If
-        # it is None, there had been no buy order yet or just send.
-        # If it is false, the last failed
-        # If it is true, the last buy order was successful
         self.buy_successful = None
         self.__active_account_type = None
+        self.websocket_thread = None
 
     def prepare_http_url(self, resource):
         """Construct http url from resource url.
@@ -184,7 +167,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         """
         return "/".join((self.https_url, resource.url))
 
-    def send_http_request(self, resource, method, data=None, params=None, headers=None):  # pylint: disable=too-many-arguments
+    def send_http_request(self, resource, method, data=None, params=None, headers=None):
         """Send http request to IQ Option server.
 
         :param resource: The instance of
@@ -201,12 +184,14 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
 
         logger.debug(url)
 
-        response = self.session.request(method=method,
-                                        url=url,
-                                        data=data,
-                                        params=params,
-                                        headers=headers,
-                                        proxies=self.proxies)
+        response = self.session.request(
+            method=method,
+            url=url,
+            data=data,
+            params=params,
+            headers=headers,
+            proxies=self.proxies
+        )
         logger.debug(response)
         logger.debug(response.text)
         logger.debug(response.headers)
@@ -215,11 +200,10 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         response.raise_for_status()
         return response
 
-    def send_http_request_v2(self, url, method, data=None, params=None, headers=None):  # pylint: disable=too-many-arguments
+    def send_http_request_v2(self, url, method, data=None, params=None, headers=None):
         """Send http request to IQ Option server.
 
-        :param resource: The instance of
-            :class:`Resource <hermes.http.resource.Resource>`.
+        :param url: The requested URL.
         :param str method: The http request method.
         :param dict data: (optional) The http request data.
         :param dict params: (optional) The http request params.
@@ -229,21 +213,23 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         """
         logger = logging.getLogger(__name__)
 
-        logger.debug(method+": "+url+" headers: "+str(self.session.headers) +
-                     " cookies: "+str(self.session.cookies.get_dict()))
+        logger.debug(
+            method+": "+url+" headers: "+str(self.session.headers) + " cookies: "+str(self.session.cookies.get_dict())
+        )
 
-        response = self.session.request(method=method,
-                                        url=url,
-                                        data=data,
-                                        params=params,
-                                        headers=headers,
-                                        proxies=self.proxies)
+        response = self.session.request(
+            method=method,
+            url=url,
+            data=data,
+            params=params,
+            headers=headers,
+            proxies=self.proxies
+        )
         logger.debug(response)
         logger.debug(response.text)
         logger.debug(response.headers)
         logger.debug(response.cookies)
 
-        # response.raise_for_status()
         return response
 
     @property
@@ -255,30 +241,27 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         return self.websocket_client.wss
 
     def send_websocket_request(self, name, msg, request_id="", no_force_send=True):
-        """Send websocket request to IQ Option server.
-
-        :param str name: The websocket request name.
-        :param dict msg: The websocket request msg.
-        """
-
+        """Send websocket request to IQ Option server."""
         logger = logging.getLogger(__name__)
 
-        data = json.dumps(dict(name=name,
-                               msg=msg, request_id=request_id))
+        data = json.dumps(dict(name=name, msg=msg, request_id=request_id))
 
-        while (global_value.ssl_Mutual_exclusion or global_value.ssl_Mutual_exclusion_write) and no_force_send:
+        while (global_value.ssl_Mutual_exclusion or global_value.ssl_mutual_exclusion_write) and no_force_send:
             pass
-        global_value.ssl_Mutual_exclusion_write = True
+
+        global_value.ssl_mutual_exclusion_write = True
+
         self.websocket.send(data)
+
         logger.debug(data)
-        global_value.ssl_Mutual_exclusion_write = False
+
+        global_value.ssl_mutual_exclusion_write = False
 
     @property
     def logout(self):
         """Property for get IQ Option http login resource.
 
-        :returns: The instance of :class:`Login
-            <hermes.http.login.Login>`.
+        :returns: The instance of :class:`Login <hermes.http.login.Login>`.
         """
         return Logout(self)
 
@@ -286,8 +269,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     def login(self):
         """Property for get IQ Option http login resource.
 
-        :returns: The instance of :class:`Login
-            <hermes.http.login.Login>`.
+        :returns: The instance of :class:`Login <hermes.http.login.Login>`.
         """
         return Login(self)
 
@@ -295,8 +277,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     def login_2fa(self):
         """Property for get IQ Option http login 2FA resource.
 
-        :returns: The instance of :class:`Login2FA
-            <hermes.http.login2fa.Login2FA>`.
+        :returns: The instance of :class:`Login2FA <hermes.http.login2fa.Login2FA>`.
         """
         return Login2FA(self)
 
@@ -304,35 +285,31 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     def send_sms_code(self):
         """Property for get IQ Option http send sms code resource.
 
-        :returns: The instance of :class:`SMS_Sender
-            <hermes.http.send_sms.SMS_Sender>`.
+        :returns: The instance of :class:`SMSSender <hermes.http.send_sms.SMSSender>`.
         """
-        return SMS_Sender(self)
+        return SMSSender(self)
 
     @property
     def verify_2fa(self):
-        """Property for get IQ Option http verify 2fa resource.
+        """Property for get IQ Option http verify 2FA resource.
 
-        :returns: The instance of :class:`Verify
-            <hermes.http.verify.Verify>`.
+        :returns: The instance of :class:`Verify <hermes.http.verify.Verify>`.
         """
         return Verify(self)
 
     @property
     def loginv2(self):
-        """Property for get IQ Option http loginv2 resource.
+        """Property for get IQ Option http login v2 resource.
 
-        :returns: The instance of :class:`Loginv2
-            <hermes.http.loginv2.Loginv2>`.
+        :returns: The instance of :class:`LoginB2 <hermes.http.loginv2.LoginB2>`.
         """
-        return Loginv2(self)
+        return LoginV2(self)
 
     @property
     def auth(self):
         """Property for get IQ Option http auth resource.
 
-        :returns: The instance of :class:`Auth
-            <hermes.http.auth.Auth>`.
+        :returns: The instance of :class:`Auth <hermes.http.auth.Auth>`.
         """
         return Auth(self)
 
@@ -340,43 +317,32 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     def appinit(self):
         """Property for get IQ Option http appinit resource.
 
-        :returns: The instance of :class:`Appinit
-            <hermes.http.appinit.Appinit>`.
+        :returns: The instance of :class:`AppInit <hermes.http.appinit.AppInit>`.
         """
-        return Appinit(self)
+        return AppInit(self)
 
     @property
     def token(self):
         """Property for get IQ Option http token resource.
 
-        :returns: The instance of :class:`Token
-            <hermes.http.auth.Token>`.
+        :returns: The instance of :class:`Token <hermes.http.auth.Token>`.
         """
         return Token(self)
 
-    # @property
-    # def profile(self):
-    #     """Property for get IQ Option http profile resource.
-
-    #     :returns: The instance of :class:`Profile
-    #         <hermes.http.profile.Profile>`.
-    #     """
-    #     return Profile(self)
     def reset_training_balance(self):
-        # sendResults True/False
-        # {"name":"sendMessage","request_id":"142","msg":{"name":"reset-training-balance","version":"2.0"}}
-
-        self.send_websocket_request(name="sendMessage", msg={"name": "reset-training-balance",
-                                                             "version": "2.0"})
+        self.send_websocket_request(name="sendMessage", msg={
+                "name": "reset-training-balance",
+                "version": "2.0"
+            }
+        )
 
     @property
-    def changebalance(self):
-        """Property for get IQ Option http changebalance resource.
+    def change_balance(self):
+        """Property for get IQ Option http change balance resource.
 
-        :returns: The instance of :class:`Changebalance
-            <hermes.http.changebalance.Changebalance>`.
+        :returns: The instance of :class:`ChangeBalance <hermes.http.changebalance.ChangeBalance>`.
         """
-        return Changebalance(self)
+        return ChangeBalance(self)
 
     @property
     def events(self):
@@ -386,8 +352,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     def billing(self):
         """Property for get IQ Option http billing resource.
 
-        :returns: The instance of :class:`Billing
-            <hermes.http.billing.Billing>`.
+        :returns: The instance of :class:`Billing <hermes.http.billing.Billing>`.
         """
         return Billing(self)
 
@@ -395,219 +360,189 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
     def buyback(self):
         """Property for get IQ Option http buyback resource.
 
-        :returns: The instance of :class:`Buyback
-            <hermes.http.buyback.Buyback>`.
+        :returns: The instance of :class:`Buyback <hermes.http.buyback.Buyback>`.
         """
         return Buyback(self)
-# ------------------------------------------------------------------------
 
     @property
-    def getprofile(self):
+    def get_profile(self):
         """Property for get IQ Option http getprofile resource.
 
-        :returns: The instance of :class:`Login
-            <hermes.http.getprofile.Getprofile>`.
+        :returns: The instance of :class:`Login <hermes.http.getprofile.GetProfile>`.
         """
-        return Getprofile(self)
-# for active code ...
+        return GetProfile(self)
 
     @property
     def get_balances(self):
-        """Property for get IQ Option http getprofile resource.
+        """Property for get IQ Option http get_profile resource.
 
-        :returns: The instance of :class:`Login
-            <hermes.http.getprofile.Getprofile>`.
+        :returns: The instance of :class:`GetProfile <hermes.http.getprofile.GetProfile>`.
         """
-        return Get_Balances(self)
+        return GetBalances(self)
 
     @property
     def get_instruments(self):
-        return Get_instruments(self)
+        return GetInstruments(self)
 
     @property
     def get_financial_information(self):
         return GetFinancialInformation(self)
-# ----------------------------------------------------------------------------
 
     @property
     def ssid(self):
         """Property for get IQ Option websocket ssid channel.
 
-        :returns: The instance of :class:`Ssid
-            <hermes.ws.channels.ssid.Ssid>`.
+        :returns: The instance of :class:`SSID <hermes.ws.channels.ssid.SSID>`.
         """
-        return Ssid(self)
-# --------------------------------------------------------------------------------
+        return SSID(self)
 
     @property
-    def Subscribe_Live_Deal(self):
-        return Subscribe_live_deal(self)
+    def subscribe_live_deal(self):
+        return SubscribeLiveDeal(self)
 
     @property
-    def Unscribe_Live_Deal(self):
-        return Unscribe_live_deal(self)
-# --------------------------------------------------------------------------------
-# trader mood
+    def unsubscribe_live_deal(self):
+        return UnscribeLiveDeal(self)
 
     @property
-    def subscribe_Traders_mood(self):
-        return Traders_mood_subscribe(self)
+    def subscribe_traders_mood(self):
+        return TradersMoodSubscribe(self)
 
     @property
-    def unsubscribe_Traders_mood(self):
-        return Traders_mood_unsubscribe(self)
-
-# --------------------------------------------------------------------------------
-# tecnical indicators
+    def unsubscribe_traders_mood(self):
+        return TradersMoodUnsubscribe(self)
 
     @property
     def get_technical_indicators(self):
-        return Technical_indicators(self)
+        return TechnicalIndicators(self)
 
-# --------------------------------------------------------------------------------
-# --------------------------subscribe&unsubscribe---------------------------------
-# --------------------------------------------------------------------------------
     @property
     def subscribe(self):
-        "candle-generated"
         """Property for get IQ Option websocket subscribe channel.
 
-        :returns: The instance of :class:`Subscribe
-            <hermes.ws.channels.subscribe.Subscribe>`.
+        :returns: The instance of :class:`Subscribe <hermes.ws.channels.subscribe.Subscribe>`.
         """
         return Subscribe(self)
 
     @property
     def subscribe_all_size(self):
-        return Subscribe_candles(self)
+        return SubscribeCandles(self)
 
     @property
     def unsubscribe(self):
         """Property for get IQ Option websocket unsubscribe channel.
 
-        :returns: The instance of :class:`Unsubscribe
-            <hermes.ws.channels.unsubscribe.Unsubscribe>`.
+        :returns: The instance of :class:`Unsubscribe <hermes.ws.channels.unsubscribe.Unsubscribe>`.
         """
         return Unsubscribe(self)
 
     @property
     def unsubscribe_all_size(self):
-        return Unsubscribe_candles(self)
+        return UnsubscribeCandles(self)
 
-    def portfolio(self, Main_Name, name, instrument_type, user_balance_id="", limit=1, offset=0, request_id=""):
-        # Main name:"unsubscribeMessage"/"subscribeMessage"/"sendMessage"(only for portfolio.get-positions")
-        # name:"portfolio.order-changed"/"portfolio.get-positions"/"portfolio.position-changed"
-        # instrument_type="cfd"/"forex"/"crypto"/"digital-option"/"turbo-option"/"binary-option"
-        logger = logging.getLogger(__name__)
-        M_name = Main_Name
+    def portfolio(self, main_name, name, instrument_type, user_balance_id="", limit=1, offset=0, request_id=""):
         request_id = str(request_id)
+
+        msg = None
+
         if name == "portfolio.order-changed":
-            msg = {"name": name,
-                   "version": "1.0",
-                   "params": {
-                       "routingFilters": {"instrument_type": str(instrument_type)}
-                   }
-                   }
-
+            msg = {
+                "name": name,
+                "version": "1.0",
+                "params": {
+                    "routingFilters": {"instrument_type": str(instrument_type)}
+                }
+            }
         elif name == "portfolio.get-positions":
-            msg = {"name": name,
-                   "version": "3.0",
-                   "body": {
-                       "instrument_type": str(instrument_type),
-                       "limit": int(limit),
-                       "offset": int(offset)
-                   }
-                   }
-
+            msg = {
+                "name": name,
+                "version": "3.0",
+                "body": {
+                    "instrument_type": str(instrument_type),
+                    "limit": int(limit),
+                    "offset": int(offset)
+                }
+            }
         elif name == "portfolio.position-changed":
-            msg = {"name": name,
-                   "version": "2.0",
-                   "params": {
-                       "routingFilters": {"instrument_type": str(instrument_type),
-                                          "user_balance_id": user_balance_id
+            msg = {
+                "name": name,
+                "version": "2.0",
+                "params": {
+                    "routingFilters": {
+                        "instrument_type": str(instrument_type),
+                        "user_balance_id": user_balance_id
+                    }
+                }
+            }
 
-                                          }
-                   }
-                   }
+        self.send_websocket_request(name=main_name, msg=msg, request_id=request_id)
 
-        self.send_websocket_request(
-            name=M_name, msg=msg, request_id=request_id)
+    def set_user_settings(self, balance_id, request_id=""):
+        msg = {
+            "name": "set-user-settings",
+            "version": "1.0",
+            "body": {
+                "name": "traderoom_gl_common",
+                "version": 3,
+                "config": {
+                    "balanceId": balance_id
+                }
+            }
+        }
 
-    def set_user_settings(self, balanceId, request_id=""):
-        # Main name:"unsubscribeMessage"/"subscribeMessage"/"sendMessage"(only for portfolio.get-positions")
-        # name:"portfolio.order-changed"/"portfolio.get-positions"/"portfolio.position-changed"
-        # instrument_type="cfd"/"forex"/"crypto"/"digital-option"/"turbo-option"/"binary-option"
-
-        msg = {"name": "set-user-settings",
-               "version": "1.0",
-               "body": {
-                   "name": "traderoom_gl_common",
-                   "version": 3,
-                   "config": {
-                       "balanceId": balanceId
-
-                   }
-
-               }
-               }
-        self.send_websocket_request(
-            name="sendMessage", msg=msg, request_id=str(request_id))
+        self.send_websocket_request(name="sendMessage", msg=msg, request_id=str(request_id))
 
     def subscribe_position_changed(self, name, instrument_type, request_id):
-        # instrument_type="multi-option","crypto","forex","cfd"
-        # name="position-changed","trading-fx-option.position-changed",digital-options.position-changed
-        msg = {"name": name,
-               "version": "1.0",
-               "params": {
-                   "routingFilters": {"instrument_type": str(instrument_type)}
+        # name: position-changed, trading-fx-option.position-changed, digital-options.position-changed
+        # instrument_type: multi-option, crypto, forex, cfd
+        msg = {
+            "name": name,
+            "version": "1.0",
+            "params": {
+                "routingFilters": {
+                    "instrument_type": str(instrument_type)}
+                }
+            }
 
-               }
-               }
-        self.send_websocket_request(
-            name="subscribeMessage", msg=msg, request_id=str(request_id))
+        self.send_websocket_request(name="subscribeMessage", msg=msg, request_id=str(request_id))
 
-    def setOptions(self, request_id, sendResults):
-        # sendResults True/False
+    def set_options(self, request_id, send_results):
+        msg = {
+            "sendResults": send_results
+        }
 
-        msg = {"sendResults": sendResults}
-
-        self.send_websocket_request(
-            name="setOptions", msg=msg, request_id=str(request_id))
-
-    @property
-    def Subscribe_Top_Assets_Updated(self):
-        return Subscribe_top_assets_updated(self)
+        self.send_websocket_request(name="setOptions", msg=msg, request_id=str(request_id))
 
     @property
-    def Unsubscribe_Top_Assets_Updated(self):
-        return Unsubscribe_top_assets_updated(self)
+    def subscribe_top_assets_updated(self):
+        return SubscribeTopAssetsUpdated(self)
 
     @property
-    def Subscribe_Commission_Changed(self):
-        return Subscribe_commission_changed(self)
+    def unsubscribe_top_assets_updated(self):
+        return UnsubscribeTopAssetsUpdated(self)
 
     @property
-    def Unsubscribe_Commission_Changed(self):
-        return Unsubscribe_commission_changed(self)
-
-# --------------------------------------------------------------------------------
-# -----------------------------------------------------------------------------------
+    def subscribe_commission_changed(self):
+        return SubscribeCommissionChanged(self)
 
     @property
-    def setactives(self):
+    def unsubscribe_commission_changed(self):
+        return UnsubscribeCommissionChanged(self)
+
+    @property
+    def set_actives(self):
         """Property for get IQ Option websocket setactives channel.
 
-        :returns: The instance of :class:`SetActives
-            <hermes.ws.channels.setactives.SetActives>`.
+        :returns: The instance of :class:`SetActives <hermes.ws.channels.setactives.SetActives>`.
         """
         return SetActives(self)
 
     @property
-    def Get_Leader_Board(self):
-        return Leader_Board(self)
+    def get_leader_board(self):
+        return LeaderBoard(self)
 
     @property
-    def getcandles(self):
+    def get_candles(self):
         """Property for get IQ Option websocket candles channel.
 
         :returns: The instance of :class:`GetCandles
@@ -619,65 +554,66 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         self.send_websocket_request(name="api_option_init_all", msg="")
 
     def get_api_option_init_all_v2(self):
+        msg = {
+            "name": "get-initialization-data",
+            "version": "3.0",
+            "body": {}
+        }
 
-        msg = {"name": "get-initialization-data",
-               "version": "3.0",
-               "body": {}
-               }
         self.send_websocket_request(name="sendMessage", msg=msg)
-# -------------get information-------------
 
     @property
-    def get_betinfo(self):
-        return Game_betinfo(self)
+    def get_bet_info(self):
+        return GameBetInfo(self)
 
     @property
     def get_options(self):
-        return Get_options(self)
+        return GetOptions(self)
 
     @property
     def get_options_v2(self):
-        return Get_options_v2(self)
-
-# ____________for_______binary_______option_____________
+        return GetOptionsV2(self)
 
     @property
-    def buyv3(self):
-        return Buyv3(self)
+    def buy_v3(self):
+        return BuyV3(self)
 
     @property
-    def buyv3_by_raw_expired(self):
-        return Buyv3_by_raw_expired(self)
+    def buy_by_raw_expired_v3(self):
+        return BuyByRawExpiredV3(self)
 
     @property
     def buy(self):
-        """Property for get IQ Option websocket buyv2 request.
+        """Property for get IQ Option websocket buy v2 request.
 
-        :returns: The instance of :class:`Buyv2
-            <hermes.ws.channels.buyv2.Buyv2>`.
+        :returns: The instance of :class:`BuyV2 <hermes.ws.channels.buyv2.BuyV2>`.
         """
         self.buy_successful = None
-        return Buyv2(self)
+
+        return BuyV2(self)
 
     @property
     def sell_option(self):
-        return Sell_Option(self)
+        return SellOption(self)
 
     @property
     def sell_digital_option(self):
-        return Sell_Digital_Option(self)
-# ____________________for_______digital____________________
+        return SellDigitalOption(self)
 
     def get_digital_underlying(self):
-        msg = {"name": "get-underlying-list",
-               "version": "2.0",
-               "body": {"type": "digital-option"}
-               }
+        msg = {
+            "name": "get-underlying-list",
+            "version": "2.0",
+            "body": {
+                "type": "digital-option"
+            }
+        }
+
         self.send_websocket_request(name="sendMessage", msg=msg)
 
     @property
     def get_strike_list(self):
-        return Strike_list(self)
+        return StrikeList(self)
 
     @property
     def subscribe_instrument_quites_generated(self):
@@ -685,24 +621,23 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
 
     @property
     def unsubscribe_instrument_quites_generated(self):
-        return Unsubscribe_Instrument_Quites_Generated(self)
+        return UnsubscribeInstrumentQuitesGenerated(self)
 
     @property
     def place_digital_option(self):
-        return Digital_options_place_digital_option(self)
+        return DigitalOptionsPlaceDigitalOption(self)
 
     @property
     def close_digital_option(self):
-        return Digital_options_close_position(self)
+        return DigitalOptionsClosePosition(self)
 
-# ____BUY_for__Forex__&&__stock(cfd)__&&__ctrpto_____
     @property
     def buy_order(self):
-        return Buy_place_order_temp(self)
+        return BuyPlaceOrderTemp(self)
 
     @property
     def change_order(self):
-        return Change_Tpsl(self)
+        return ChangeTPSL(self)
 
     @property
     def change_auto_margin_call(self):
@@ -710,7 +645,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
 
     @property
     def get_order(self):
-        return Get_order(self)
+        return GetOrder(self)
 
     @property
     def get_pending(self):
@@ -718,49 +653,46 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
 
     @property
     def get_positions(self):
-        return Get_positions(self)
+        return GetPositions(self)
 
     @property
     def get_position(self):
-        return Get_position(self)
+        return GetPosition(self)
 
     @property
     def get_digital_position(self):
-        return Get_digital_position(self)
+        return GetDigitalPosition(self)
 
     @property
     def get_position_history(self):
-        return Get_position_history(self)
+        return GetPositionHistory(self)
 
     @property
     def get_position_history_v2(self):
-        return Get_position_history_v2(self)
+        return GetPositionHistoryV2(self)
 
     @property
     def get_available_leverages(self):
-        return Get_available_leverages(self)
+        return GetAvailableLeverages(self)
 
     @property
     def cancel_order(self):
-        return Cancel_order(self)
+        return CancelOrder(self)
 
     @property
     def close_position(self):
-        return Close_position(self)
+        return ClosePosition(self)
 
     @property
     def get_overnight_fee(self):
-        return Get_overnight_fee(self)
-# -------------------------------------------------------
+        return GetOvernightFee(self)
 
     @property
     def heartbeat(self):
         return Heartbeat(self)
-# -------------------------------------------------------
 
     def set_session(self, cookies, headers):
         """Method to set session cookies."""
-
         self.session.headers.update(headers)
 
         self.session.cookies.clear_session_cookies()
@@ -773,10 +705,15 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
 
         self.websocket_client = WebsocketClient(self)
 
-        self.websocket_thread = threading.Thread(target=self.websocket.run_forever, kwargs={'sslopt': {
-                                                 "check_hostname": False, "cert_reqs": ssl.CERT_NONE, "ca_certs": "cacert.pem"}})  # for fix pyinstall error: cafile, capath and cadata cannot be all omitted
+        self.websocket_thread = threading.Thread(target=self.websocket.run_forever, kwargs={
+                                                    "sslopt": {
+                                                        "check_hostname": False,
+                                                        "cert_reqs": ssl.CERT_NONE,
+                                                        "ca_certs": "cacert.pem"
+                                                    }})
         self.websocket_thread.daemon = True
         self.websocket_thread.start()
+
         while True:
             try:
                 if global_value.check_websocket_if_error:
@@ -787,21 +724,19 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
                     return True, None
             except:
                 pass
-
             pass
 
-    # @tokensms.setter
-    def setTokenSMS(self, response):
+    def set_token_sms(self, response):
         token_sms = response.json()['token']
         self.token_sms = token_sms
 
-    # @token2fa.setter
-    def setToken2FA(self, response):
+    def set_token_2fa(self, response):
         token_2fa = response.json()['token']
         self.token_login2fa = token_2fa
 
     def get_ssid(self):
         response = None
+
         try:
             if self.token_login2fa is None:
                 response = self.login(
@@ -813,12 +748,14 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
             logger = logging.getLogger(__name__)
             logger.error(e)
             return e
+
         return response
 
     def send_ssid(self):
         self.profile.msg = None
-        self.ssid(global_value.SSID)  # pylint: disable=not-callable
-        while self.profile.msg == None:
+        self.ssid(global_value.SSID)
+
+        while self.profile.msg is None:
             pass
         if self.profile.msg == False:
             return False
@@ -826,57 +763,60 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
             return True
 
     def connect(self):
-
-        global_value.ssl_Mutual_exclusion = False
-        global_value.ssl_Mutual_exclusion_write = False
         """Method for connection to IQ Option API."""
+        global_value.ssl_Mutual_exclusion = False
+        global_value.ssl_mutual_exclusion_write = False
+
         try:
             self.close()
         except:
             pass
+
         check_websocket, websocket_reason = self.start_websocket()
 
-        if check_websocket == False:
+        if not check_websocket:
             return check_websocket, websocket_reason
 
-        # doing temp ssid reconnect for speed up
-        if global_value.SSID != None:
+        if global_value.SSID is not None:
 
             check_ssid = self.send_ssid()
 
-            if check_ssid == False:
-                # ssdi time out need reget,if sent error ssid,the weksocket will close by iqoption server
+            if not check_ssid:
                 response = self.get_ssid()
+
                 try:
                     global_value.SSID = response.cookies["ssid"]
                 except:
                     return False, response.text
+
                 atexit.register(self.logout)
+
                 self.start_websocket()
                 self.send_ssid()
 
-        # the ssid is None need get ssid
         else:
             response = self.get_ssid()
+
             try:
                 global_value.SSID = response.cookies["ssid"]
             except:
                 self.close()
                 return False, response.text
+
             atexit.register(self.logout)
             self.send_ssid()
 
-        # set ssis cookie
-        requests.utils.add_dict_to_cookiejar(
-            self.session.cookies, {"ssid": global_value.SSID})
+        requests.utils.add_dict_to_cookiejar(self.session.cookies, {"ssid": global_value.SSID})
 
-        self.timesync.server_timestamp = None
+        self.time_sync.server_timestamp = None
+
         while True:
             try:
-                if self.timesync.server_timestamp != None:
+                if self.time_sync.server_timestamp is not None:
                     break
             except:
                 pass
+
         return True, None
 
     def connect2fa(self, sms_code):
@@ -885,10 +825,11 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         if response.json()['code'] != 'success':
             return False, response.json()['message']
 
-        # token_2fa
-        self.setToken2FA(response)
+        self.set_token_2fa(response)
+
         if self.token_login2fa is None:
             return False, None
+
         return True, None
 
     def close(self):
@@ -899,13 +840,13 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
         return self.websocket_thread.is_alive()
 
     @property
-    def Get_User_Profile_Client(self):
-        return Get_user_profile_client(self)
+    def get_user_profile_client(self):
+        return GetUserProfileClient(self)
 
     @property
-    def Request_Leaderboard_Userinfo_Deals_Client(self):
-        return Request_leaderboard_userinfo_deals_client(self)
+    def request_leaderboard_userinfo_deals_client(self):
+        return RequestLeaderboardUserinfoDealsClient(self)
 
     @property
-    def Get_Users_Availability(self):
-        return Get_users_availability(self)
+    def get_users_availability(self):
+        return GetUsersAvailability(self)

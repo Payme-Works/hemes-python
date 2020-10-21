@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Traders_mood_subscribe(Base):
+class TradersMoodSubscribe(Base):
     name = "subscribeMessage"
 
     def __call__(self, active, instrument="turbo-option"):
@@ -18,7 +18,7 @@ class Traders_mood_subscribe(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Traders_mood_unsubscribe(Base):
+class TradersMoodUnsubscribe(Base):
     name = "unsubscribeMessage"
 
     def __call__(self, active, instrument="turbo-option"):

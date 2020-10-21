@@ -26,7 +26,7 @@ class Unsubscribe(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Unsubscribe_candles(Base):
+class UnsubscribeCandles(Base):
     """Class for IQ Option candles websocket channel."""
     # pylint: disable=too-few-public-methods
 
@@ -46,7 +46,7 @@ class Unsubscribe_candles(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Unsubscribe_Instrument_Quites_Generated(Base):
+class UnsubscribeInstrumentQuitesGenerated(Base):
     name = "unsubscribeMessage"
 
     def __call__(self, ACTIVE, expiration_period):
@@ -64,7 +64,7 @@ class Unsubscribe_Instrument_Quites_Generated(Base):
         self.send_websocket_request(self.name, data)
 
     def get_digital_expiration_time(self, duration):
-        exp = int(self.api.timesync.server_timestamp)
+        exp = int(self.api.time_sync.server_timestamp)
         value = datetime.datetime.fromtimestamp(exp)
         minute = int(value.strftime('%M'))
         second = int(value.strftime('%S'))
@@ -76,7 +76,7 @@ class Unsubscribe_Instrument_Quites_Generated(Base):
         return ans
 
 
-class Unsubscribe_top_assets_updated(Base):
+class UnsubscribeTopAssetsUpdated(Base):
     name = "unsubscribeMessage"
 
     def __call__(self, instrument_type):
@@ -93,7 +93,7 @@ class Unsubscribe_top_assets_updated(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Unsubscribe_commission_changed(Base):
+class UnsubscribeCommissionChanged(Base):
     name = "unsubscribeMessage"
 
     def __call__(self, instrument_type):
@@ -109,7 +109,7 @@ class Unsubscribe_commission_changed(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Unscribe_live_deal(Base):
+class UnscribeLiveDeal(Base):
     name = "unsubscribeMessage"
 
     def __call__(self, name, active_id, _type):

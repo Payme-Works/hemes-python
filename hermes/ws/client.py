@@ -54,7 +54,7 @@ class WebsocketClient(object):
         message = json.loads(str(message))
 
         if message["name"] == "timeSync":
-            self.api.timesync.server_timestamp = message["msg"]
+            self.api.time_sync.server_timestamp = message["msg"]
          #######################################################
         # ---------------------for_realtime_candle______________
         #######################################################
@@ -66,7 +66,7 @@ class WebsocketClient(object):
             size = int(message["msg"]["size"])
             from_ = int(message["msg"]["from"])
             msg = message["msg"]
-            maxdict = self.api.real_time_candles_maxdict_table[Active_name][size]
+            maxdict = self.api.real_time_candles_max_dict_table[Active_name][size]
 
             self.dict_queue_add(self.api.real_time_candles,
                                 maxdict, active, size, from_, msg)
@@ -87,7 +87,7 @@ class WebsocketClient(object):
                 v["size"] = int(k)
                 size = int(v["size"])
                 from_ = int(v["from"])
-                maxdict = self.api.real_time_candles_maxdict_table[Active_name][size]
+                maxdict = self.api.real_time_candles_max_dict_table[Active_name][size]
                 msg = v
                 self.dict_queue_add(self.api.real_time_candles,
                                     maxdict, active, size, from_, msg)
@@ -99,7 +99,7 @@ class WebsocketClient(object):
             Active_name = list(OP_code.ACTIVES.keys())[list(
                 OP_code.ACTIVES.values()).index(active_id)]
             commission = message["msg"]["commission"]["value"]
-            self.api.subscribe_commission_changed_data[instrument_type][Active_name][self.api.timesync.server_timestamp] = int(
+            self.api.subscribe_commission_changed_data[instrument_type][Active_name][self.api.time_sync.server_timestamp] = int(
                 commission)
 
         #######################################################
@@ -185,7 +185,7 @@ class WebsocketClient(object):
         # **********************************************************
         elif message["name"] == "listInfoData":
             for get_m in message["msg"]:
-                self.api.listinfodata.set(
+                self.api.list_info_data.set(
                     get_m["win"], get_m["game_state"], get_m["id"])
         elif message["name"] == "socket-option-opened":
             id = message["msg"]["id"]

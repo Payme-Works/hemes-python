@@ -8,7 +8,7 @@ class Heartbeat(Base):
         data = {
             "msg": {
                 "heartbeatTime": int(heartbeatTime),
-                "userTime": int(self.api.timesync.server_timestamp*1000)
+                "userTime": int(self.api.time_sync.server_timestamp * 1000)
             }
         }
 

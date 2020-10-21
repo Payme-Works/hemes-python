@@ -1,15 +1,14 @@
 from hermes.ws.channels.base import Base
 
 
-class Cancel_order(Base):
+class GetOrder(Base):
     name = "sendMessage"
 
     def __call__(self, order_id):
         data = {
-            "name": "cancel-order",
-            "version": "1.0",
+            "name": "get-order",
             "body": {
-                "order_id": order_id
+                "order_id": int(order_id)
             }
         }
 

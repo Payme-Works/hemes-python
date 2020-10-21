@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Leader_Board(Base):
+class LeaderBoard(Base):
     name = "sendMessage"
 
     def __call__(self, country_id, user_country_id, from_position, to_position, near_traders_country_count, near_traders_count, top_country_count, top_count, top_type):

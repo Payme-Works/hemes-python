@@ -2,7 +2,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Get_Balances(Base):
+class GetBalances(Base):
     name = "sendMessage"
 
     def __call__(self):

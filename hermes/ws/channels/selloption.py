@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Sell_Option(Base):
+class SellOption(Base):
     name = "sendMessage"
 
     def __call__(self, options_ids):

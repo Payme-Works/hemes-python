@@ -2,7 +2,7 @@ import time
 from hermes.ws.channels.base import Base
 
 
-class Technical_indicators(Base):
+class TechnicalIndicators(Base):
     name = "sendMessage"
 
     def __call__(self, active):

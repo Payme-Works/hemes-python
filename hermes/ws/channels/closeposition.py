@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Close_position(Base):
+class ClosePosition(Base):
     name = "sendMessage"
 
     def __call__(self, position_id):

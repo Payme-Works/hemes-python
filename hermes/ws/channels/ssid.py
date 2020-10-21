@@ -3,7 +3,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Ssid(Base):
+class SSID(Base):
     """Class for IQ Option API ssid websocket channel."""
     # pylint: disable=too-few-public-methods
 

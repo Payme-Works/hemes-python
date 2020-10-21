@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Get_overnight_fee(Base):
+class GetOvernightFee(Base):
     name = "sendMessage"
 
     def __call__(self, instrument_type, active_id):

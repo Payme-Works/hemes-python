@@ -3,7 +3,7 @@ from hermes.ws.channels.base import Base
 import hermes.global_value as global_value
 
 
-class Digital_options_place_digital_option(Base):
+class DigitalOptionsPlaceDigitalOption(Base):
     name = "sendMessage"
 
     def __call__(self, instrument_id, amount, user_balance_id=None):
@@ -27,7 +27,7 @@ class Digital_options_place_digital_option(Base):
         return request_id
 
 
-class Digital_options_close_position(Base):
+class DigitalOptionsClosePosition(Base):
     name = "sendMessage"
 
     def __call__(self, position_id):

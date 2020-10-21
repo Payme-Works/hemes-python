@@ -2,7 +2,7 @@ from hermes.ws.channels.base import Base
 import hermes.global_value as global_value
 
 
-class Get_positions(Base):
+class GetPositions(Base):
     name = "sendMessage"
 
     def __call__(self, instrument_type):
@@ -24,7 +24,7 @@ class Get_positions(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Get_position(Base):
+class GetPosition(Base):
     name = "sendMessage"
 
     def __call__(self, position_id):
@@ -38,7 +38,7 @@ class Get_position(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Get_position_history(Base):
+class GetPositionHistory(Base):
     name = "sendMessage"
 
     def __call__(self, instrument_type):
@@ -53,7 +53,7 @@ class Get_position_history(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Get_position_history_v2(Base):
+class GetPositionHistoryV2(Base):
     name = "sendMessage"
 
     def __call__(self, instrument_types, limit, offset, start=0, end=0):
@@ -72,7 +72,7 @@ class Get_position_history_v2(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Get_digital_position(Base):
+class GetDigitalPosition(Base):
     name = "sendMessage"
 
     def __call__(self, position_id):

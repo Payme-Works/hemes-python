@@ -24,7 +24,7 @@ class Subscribe(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Subscribe_candles(Base):
+class SubscribeCandles(Base):
     """Class for IQ Option candles websocket channel."""
     # pylint: disable=too-few-public-methods
 
@@ -62,7 +62,7 @@ class Subscribe_Instrument_Quites_Generated(Base):
         self.send_websocket_request(self.name, data)
 
     def get_digital_expiration_time(self, duration):
-        exp = int(self.api.timesync.server_timestamp)
+        exp = int(self.api.time_sync.server_timestamp)
         value = datetime.datetime.fromtimestamp(exp)
         minute = int(value.strftime('%M'))
         second = int(value.strftime('%S'))
@@ -74,7 +74,7 @@ class Subscribe_Instrument_Quites_Generated(Base):
         return ans
 
 
-class Subscribe_top_assets_updated(Base):
+class SubscribeTopAssetsUpdated(Base):
     name = "subscribeMessage"
 
     def __call__(self, instrument_type):
@@ -91,7 +91,7 @@ class Subscribe_top_assets_updated(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Subscribe_commission_changed(Base):
+class SubscribeCommissionChanged(Base):
     name = "subscribeMessage"
 
     def __call__(self, instrument_type):
@@ -108,7 +108,7 @@ class Subscribe_commission_changed(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Subscribe_live_deal(Base):
+class SubscribeLiveDeal(Base):
     name = "subscribeMessage"
 
     def __call__(self, name, active_id, _type):

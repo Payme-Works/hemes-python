@@ -2,7 +2,7 @@ import datetime
 from hermes.ws.channels.base import Base
 
 
-class Strike_list(Base):
+class StrikeList(Base):
     name = "sendMessage"
 
     def __call__(self, name, duration):
@@ -21,7 +21,7 @@ class Strike_list(Base):
         self.send_websocket_request(self.name, data)
 
     def get_digital_expiration_time(self, duration):
-        exp = int(self.api.timesync.server_timestamp)
+        exp = int(self.api.time_sync.server_timestamp)
         value = datetime.datetime.fromtimestamp(exp)
         minute = int(value.strftime('%M'))
         second = int(value.strftime('%S'))

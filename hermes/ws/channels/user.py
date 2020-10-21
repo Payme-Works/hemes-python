@@ -4,7 +4,7 @@ from hermes.ws.channels.base import Base
 import hermes.constants as OP_code
 
 
-class Get_user_profile_client(Base):
+class GetUserProfileClient(Base):
     name = "sendMessage"
 
     def __call__(self, user_id):
@@ -20,7 +20,7 @@ class Get_user_profile_client(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Request_leaderboard_userinfo_deals_client(Base):
+class RequestLeaderboardUserinfoDealsClient(Base):
     """Class for IQ Option candles websocket channel."""
     # pylint: disable=too-few-public-methods
 
@@ -38,7 +38,7 @@ class Request_leaderboard_userinfo_deals_client(Base):
         self.send_websocket_request(self.name, data)
 
 
-class Get_users_availability(Base):
+class GetUsersAvailability(Base):
     """Class for IQ Option candles websocket channel."""
     # pylint: disable=too-few-public-methods
 

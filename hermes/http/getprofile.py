@@ -3,7 +3,7 @@
 from hermes.http.resource import Resource
 
 
-class Getprofile(Resource):
+class GetProfile(Resource):
     """Class for IQ Option getprofile resource."""
     # pylint: disable=too-few-public-methods
 

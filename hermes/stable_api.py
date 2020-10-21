@@ -52,7 +52,7 @@ class StableHermes:
         self.change_balance(balance_mode)
 
     def get_server_timestamp(self):
-        return self.api.timesync.server_timestamp
+        return self.api.time_sync.server_timestamp
 
     def resubscribe_stream(self):
         try:
@@ -88,7 +88,7 @@ class StableHermes:
         check = None
 
         if sms_code is not None:
-            self.api.setTokenSMS(self.resp_sms)
+            self.api.set_token_sms(self.resp_sms)
 
             status, reason = self.api.connect2fa(sms_code)
 
@@ -112,7 +112,7 @@ class StableHermes:
                 "subscribeMessage", global_value.balance_id)
 
             self.order_changed_all("subscribeMessage")
-            self.api.setOptions(1, True)
+            self.api.set_options(1, True)
 
             return True, None
         else:
@@ -176,7 +176,7 @@ class StableHermes:
 
         country_id = countries.ID[country]
 
-        self.api.Get_Leader_Board(country_id, user_country_id, from_position, to_position,
+        self.api.get_leader_board(country_id, user_country_id, from_position, to_position,
                                   near_traders_country_count, near_traders_count, top_country_count, top_count,
                                   top_type)
 
@@ -409,7 +409,7 @@ class StableHermes:
         instrument_type = ["cfd", "forex", "crypto",
                            "digital-option", "turbo-option", "binary-option"]
         for ins in instrument_type:
-            self.api.portfolio(Main_Name=main_name, name="portfolio.position-changed",
+            self.api.portfolio(main_name=main_name, name="portfolio.position-changed",
                                instrument_type=ins, user_balance_id=user_balance_id)
 
     def order_changed_all(self, main_name):
@@ -417,7 +417,7 @@ class StableHermes:
                            "digital-option", "turbo-option", "binary-option"]
         for ins in instrument_type:
             self.api.portfolio(
-                Main_Name=main_name, name="portfolio.order-changed", instrument_type=ins)
+                main_name=main_name, name="portfolio.order-changed", instrument_type=ins)
 
     def change_balance(self, balance_mode):
         def set_id(b_id):
@@ -455,7 +455,7 @@ class StableHermes:
         self.api.candles.candles_data = None
         while True:
             try:
-                self.api.getcandles(codes.ACTIVES[actives], interval, count, end_time)
+                self.api.get_candles(codes.ACTIVES[actives], interval, count, end_time)
 
                 while self.check_connect and self.api.candles.candles_data is None:
                     pass
@@ -472,10 +472,10 @@ class StableHermes:
         if size == "all":
             for s in self.size:
                 self.full_realtime_get_candle(active, s, max_dict)
-                self.api.real_time_candles_maxdict_table[active][s] = max_dict
+                self.api.real_time_candles_max_dict_table[active][s] = max_dict
             self.start_candles_all_size_stream(active)
         elif size in self.size:
-            self.api.real_time_candles_maxdict_table[active][size] = max_dict
+            self.api.real_time_candles_max_dict_table[active][size] = max_dict
             self.full_realtime_get_candle(active, size, max_dict)
             self.start_candles_one_stream(active, size)
         else:
@@ -514,7 +514,7 @@ class StableHermes:
         return self.api.real_time_candles
 
     def full_realtime_get_candle(self, active, size, max_dict):
-        candles = self.get_candles(active, size, max_dict, self.api.timesync.server_timestamp)
+        candles = self.get_candles(active, size, max_dict, self.api.time_sync.server_timestamp)
 
         for can in candles:
             self.api.real_time_candles[str(active)][int(size)][can["from"]] = can
@@ -605,10 +605,10 @@ class StableHermes:
             time.sleep(self.suspend * 10)
 
     def subscribe_top_assets_updated(self, instrument_type):
-        self.api.Subscribe_Top_Assets_Updated(instrument_type)
+        self.api.subscribe_top_assets_updated(instrument_type)
 
     def unsubscribe_top_assets_updated(self, instrument_type):
-        self.api.Unsubscribe_Top_Assets_Updated(instrument_type)
+        self.api.unsubscribe_top_assets_updated(instrument_type)
 
     def get_top_assets_updated(self, instrument_type):
         if instrument_type in self.api.top_assets_updated_data:
@@ -617,10 +617,10 @@ class StableHermes:
             return None
 
     def subscribe_commission_changed(self, instrument_type):
-        self.api.Subscribe_Commission_Changed(instrument_type)
+        self.api.subscribe_commission_changed(instrument_type)
 
     def unsubscribe_commission_changed(self, instrument_type):
-        self.api.Unsubscribe_Commission_Changed(instrument_type)
+        self.api.unsubscribe_commission_changed(instrument_type)
 
     def get_commission_change(self, instrument_type):
         return self.api.subscribe_commission_changed_data[instrument_type]
@@ -630,7 +630,7 @@ class StableHermes:
             self.subscribe_mood.append(actives)
 
         while True:
-            self.api.subscribe_Traders_mood(
+            self.api.subscribe_traders_mood(
                 codes.ACTIVES[actives], instrument)
             try:
                 self.api.traders_mood[codes.ACTIVES[actives]]
@@ -641,7 +641,7 @@ class StableHermes:
     def stop_mood_stream(self, actives, instrument="turbo-option"):
         if actives in self.subscribe_mood:
             del self.subscribe_mood[actives]
-        self.api.unsubscribe_Traders_mood(codes.ACTIVES[actives], instrument)
+        self.api.unsubscribe_traders_mood(codes.ACTIVES[actives], instrument)
 
     def get_traders_mood(self, actives):
         return self.api.traders_mood[codes.ACTIVES[actives]]
@@ -669,14 +669,14 @@ class StableHermes:
     def check_win(self, id_number):
         while True:
             try:
-                list_info_data_dict = self.api.listinfodata.get(id_number)
+                list_info_data_dict = self.api.list_info_data.get(id_number)
 
                 if list_info_data_dict["game_state"] == 1:
                     break
             except:
                 pass
 
-        self.api.listinfodata.delete(id_number)
+        self.api.list_info_data.delete(id_number)
 
         return list_info_data_dict["win"]
 
@@ -731,7 +731,7 @@ class StableHermes:
             start = time.time()
 
             try:
-                self.api.get_betinfo(id_number)
+                self.api.get_bet_info(id_number)
             except:
                 logging.error('**error** def get_betinfo  self.api.get_betinfo reconnect')
                 self.connect()
@@ -740,7 +740,7 @@ class StableHermes:
                 if time.time() - start > 10:
                     logging.error('**error** get_betinfo time out need reconnect')
                     self.connect()
-                    self.api.get_betinfo(id_number)
+                    self.api.get_bet_info(id_number)
                     time.sleep(self.suspend * 10)
             if self.api.game_betinfo.isSuccessful:
                 return self.api.game_betinfo.isSuccessful, self.api.game_betinfo.dict
@@ -772,7 +772,7 @@ class StableHermes:
             buy_len = len(price)
 
             for idx in range(buy_len):
-                self.api.buyv3(
+                self.api.buy_v3(
                     price[idx], codes.ACTIVES[actives[idx]], action[idx], expirations[idx], idx)
 
             while len(self.api.buy_multi_option) < buy_len:
@@ -792,7 +792,7 @@ class StableHermes:
             logging.error('buy_multi error please input all same len')
 
     def get_remaining(self, duration):
-        for remaining in get_remaning_time(self.api.timesync.server_timestamp):
+        for remaining in get_remaning_time(self.api.time_sync.server_timestamp):
             if remaining[0] == duration:
                 return remaining[1]
 
@@ -811,7 +811,7 @@ class StableHermes:
         except:
             pass
 
-        self.api.buyv3_by_raw_expired(
+        self.api.buy_by_raw_expired_v3(
             price, codes.ACTIVES[active], direction, option, expired, request_id=req_id)
 
         start_t = time.time()
@@ -850,7 +850,7 @@ class StableHermes:
         except:
             pass
 
-        self.api.buyv3(
+        self.api.buy_v3(
             float(price), codes.ACTIVES[actives], str(action), int(expirations), req_id)
 
         start_t = time.time()
@@ -1000,7 +1000,7 @@ class StableHermes:
             logging.error('buy_digital_spot active error')
             return -1
 
-        timestamp = int(self.api.timesync.server_timestamp)
+        timestamp = int(self.api.time_sync.server_timestamp)
 
         if duration == 1:
             exp, _ = get_expiration_time(timestamp, duration)
@@ -1453,11 +1453,11 @@ class StableHermes:
         # name: live-deal-binary-option-placed, live-deal-digital-option
         active_id = codes.ACTIVES[active]
 
-        self.api.Subscribe_Live_Deal(name, active_id, _type)
+        self.api.subscribe_live_deal(name, active_id, _type)
 
     def unsubscribe_live_deal(self, name, active, _type):
         active_id = codes.ACTIVES[active]
-        self.api.Unscribe_Live_Deal(name, active_id, _type)
+        self.api.unsubscribe_live_deal(name, active_id, _type)
 
     def set_digital_live_deal_cb(self, cb):
         self.api.digital_live_deal_cb = cb
@@ -1476,7 +1476,7 @@ class StableHermes:
 
     def get_user_profile_client(self, user_id):
         self.api.user_profile_client = None
-        self.api.Get_User_Profile_Client(user_id)
+        self.api.get_user_profile_client(user_id)
 
         while self.api.user_profile_client is None:
             pass
@@ -1493,7 +1493,7 @@ class StableHermes:
             except:
                 pass
 
-            self.api.Request_Leaderboard_Userinfo_Deals_Client(
+            self.api.request_leaderboard_userinfo_deals_client(
                 user_id, country_id)
             time.sleep(0.2)
 
@@ -1503,7 +1503,7 @@ class StableHermes:
         self.api.users_availability = None
 
         while self.api.users_availability is None:
-            self.api.Get_Users_Availability(user_id)
+            self.api.get_users_availability(user_id)
             time.sleep(0.2)
 
         return self.api.users_availability

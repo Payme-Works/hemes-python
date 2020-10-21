@@ -4,7 +4,7 @@ check_websocket_if_connect=None
 ssl_Mutual_exclusion=False#mutex read write
 #if false websocket can sent self.websocket.send(data)
 #else can not sent self.websocket.send(data)
-ssl_Mutual_exclusion_write=False#if thread wirite 
+ssl_mutual_exclusion_write=False#if thread wirite
 
 SSID=None
 

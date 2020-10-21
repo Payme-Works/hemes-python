@@ -1,7 +1,7 @@
 from hermes.ws.channels.base import Base
 
 
-class Change_Tpsl(Base):
+class ChangeTPSL(Base):
     name = "sendMessage"
 
     def __call__(self, ID_Name, ID,

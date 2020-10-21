@@ -2,7 +2,7 @@ from hermes.ws.channels.base import Base
 import hermes.global_value as global_value
 
 
-class Buy_place_order_temp(Base):
+class BuyPlaceOrderTemp(Base):
     name = "sendMessage"
 
     def __call__(self,
