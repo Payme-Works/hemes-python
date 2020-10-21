@@ -699,7 +699,7 @@ class Hermes(object):
         requests.utils.add_dict_to_cookiejar(self.session.cookies, cookies)
 
     def start_websocket(self):
-        global_value.check_websocket_if_connect = 0
+        global_value.check_websocket_if_connect = None
         global_value.check_websocket_if_error = False
         global_value.websocket_error_reason = None
 

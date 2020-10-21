@@ -1,4 +1,4 @@
-check_websocket_if_connect = 0
+check_websocket_if_connect = None
 ssl_Mutual_exclusion = False
 ssl_mutual_exclusion_write = False
 
