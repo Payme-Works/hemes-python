@@ -11,14 +11,12 @@ password = os.getenv("password")
 
 class TestBinaryOption(unittest.TestCase):
     def test_binary_option(self):
-        # login
         i_want_money = Hermes(email, password)
         i_want_money.change_balance("PRACTICE")
         i_want_money.reset_practice_balance()
 
         self.assertEqual(i_want_money.check_connect(), True)
 
-        # start test binary option
         all_asset = i_want_money.get_all_open_time()
 
         if all_asset["turbo"]["EURUSD"]["open"]:
@@ -27,7 +25,7 @@ class TestBinaryOption(unittest.TestCase):
             actives = "EURUSD-OTC"
 
         money = 1
-        action_call = "call"  # or "put"
+        action_call = "call"
         expirations_mode = 1
 
         check_call, id_call = i_want_money.buy(

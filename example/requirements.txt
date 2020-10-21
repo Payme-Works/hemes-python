@@ -1,7 +1,7 @@
 astroid==2.4.2
 certifi==2020.6.20
 chardet==3.0.4
-hermes @ git+git://github.com/PaymeTrade/hermes.git@fcc3d08299c2a7cffbb947648b8906ae1fd11465
+hermes @ git+git://github.com/PaymeTrade/hermes.git@ca2d3e6a4b770acbf8a8b23a59621003117d25f6
 idna==2.10
 isort==5.6.4
 lazy-object-proxy==1.4.3
