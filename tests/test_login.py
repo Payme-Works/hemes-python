@@ -10,6 +10,7 @@ class TestLogin(unittest.TestCase):
 
     def test_login(self):
         i_want_money = Hermes(email, password)
+        i_want_money.connect()
 
         i_want_money.change_balance("PRACTICE")
         # i_want_money.reset_practice_balance()

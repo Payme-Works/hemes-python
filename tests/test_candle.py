@@ -15,6 +15,8 @@ class TestCandle(unittest.TestCase):
     def test_candle(self):
         # login
         i_want_money = Hermes(email, password)
+        i_want_money.connect()
+
         i_want_money.change_balance("PRACTICE")
         i_want_money.reset_practice_balance()
 

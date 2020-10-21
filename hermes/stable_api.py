@@ -48,7 +48,7 @@ class StableHermes:
         }
         self.SESSION_COOKIE = {}
 
-        self.connect()
+        # self.connect()
         # self.change_balance(balance_mode)
 
     def get_server_timestamp(self):
