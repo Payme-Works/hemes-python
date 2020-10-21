@@ -796,16 +796,16 @@ class StableHermes:
             while len(self.api.buy_multi_option) < buy_len:
                 pass
 
-            buy_id = []
+            buy_ids = []
 
             for key in sorted(self.api.buy_multi_option.keys()):
                 try:
                     value = self.api.buy_multi_option[str(key)]
-                    buy_id.append(value["id"])
+                    buy_ids.append(value["id"])
                 except:
-                    buy_id.append(None)
+                    buy_ids.append(None)
 
-            return buy_id
+            return buy_ids
         else:
             logging.error('buy_multi error please input all same len')
 
@@ -857,7 +857,16 @@ class StableHermes:
 
         return self.api.result, self.api.buy_multi_option[req_id]["id"]
 
-    def buy(self, price, actives, action, expirations):
+    def buy(self, data):
+        if type(data) is list:
+            results = []
+
+            for item in data:
+                buy_result = self.buy(item)
+                results.append(buy_result)
+
+            return results
+
         self.api.buy_multi_option = {}
         self.api.buy_successful = None
 
@@ -869,7 +878,7 @@ class StableHermes:
             pass
 
         self.api.buy_v3(
-            float(price), codes.ACTIVES[actives], str(action), int(expirations), req_id)
+            float(data['price_amount']), codes.ACTIVES[data['active']], str(data['action']), int(data['expiration']), req_id)
 
         start_t = time.time()
         id = None
