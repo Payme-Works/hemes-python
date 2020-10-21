@@ -133,7 +133,7 @@ class StableHermes:
 
     @staticmethod
     def check_connect():
-        if global_value.check_websocket_if_connect == 0:
+        if global_value.check_websocket_if_connect == 0 or global_value.check_websocket_if_connect is None:
             return False
         else:
             return True
