@@ -57,4 +57,4 @@ class TestBinaryOption(unittest.TestCase):
 
         self.assertTrue(is_successful)
 
-        i_want_money.get_optioninfo(10)
+        i_want_money.get_option_info(10)

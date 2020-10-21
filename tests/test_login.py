@@ -15,3 +15,6 @@ class TestLogin(unittest.TestCase):
         # i_want_money.reset_practice_balance()
 
         self.assertEqual(i_want_money.check_connect(), True)
+
+        balances = i_want_money.get_balances()
+        print(balances)

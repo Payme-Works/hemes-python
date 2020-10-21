@@ -461,7 +461,7 @@ class Hermes(object):  # pylint: disable=too-many-instance-attributes
 # tecnical indicators
 
     @property
-    def get_Technical_indicators(self):
+    def get_technical_indicators(self):
         return Technical_indicators(self)
 
 # --------------------------------------------------------------------------------

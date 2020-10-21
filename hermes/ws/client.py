@@ -273,7 +273,7 @@ class WebsocketClient(object):
         elif message["name"] == "overnight-fee":
             self.api.overnight_fee = message
         elif message["name"] == "api_game_getoptions_result":
-            self.api.api_game_getoptions_result = message
+            self.api.api_game_get_options_result = message
         elif message["name"] == "sold-options":
             self.api.sold_options_respond = message
         elif message["name"] == "tpsl-changed":
