@@ -380,9 +380,14 @@ class StableHermes:
     def get_balances(self):
         self.api.balances_raw = None
         self.api.get_balances()
+
         while self.api.balances_raw is None:
             pass
-        return self.api.balances_raw
+
+        if self.api.balances_raw is None:
+            return None
+
+        return self.api.balances_raw['msg']
 
     def get_balance_mode(self):
         profile = self.get_profile_async()
