@@ -687,7 +687,7 @@ class StableHermes:
 
     def check_win_v2(self, id_number, polling_time=1):
         while True:
-            check, data = self.get_betinfo(id_number)
+            check, data = self.get_bet_info(id_number)
 
             if check:
                 win = data["result"]["data"][str(id_number)]["win"]
@@ -729,7 +729,7 @@ class StableHermes:
 
             time.sleep(1)
 
-    def get_betinfo(self, id_number):
+    def get_bet_info(self, id_number):
         while True:
             self.api.game_betinfo.isSuccessful = None
 
@@ -738,12 +738,12 @@ class StableHermes:
             try:
                 self.api.get_bet_info(id_number)
             except:
-                logging.error('**error** def get_betinfo  self.api.get_betinfo reconnect')
+                logging.error('**error** def get_bet_info  self.api.get_bet_info reconnect')
                 self.connect()
 
             while self.api.game_betinfo.isSuccessful is None:
                 if time.time() - start > 10:
-                    logging.error('**error** get_betinfo time out need reconnect')
+                    logging.error('**error** get_bet_info time out need reconnect')
                     self.connect()
                     self.api.get_bet_info(id_number)
                     time.sleep(self.suspend * 10)

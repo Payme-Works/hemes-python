@@ -55,9 +55,6 @@ class WebsocketClient(object):
 
         if message["name"] == "timeSync":
             self.api.time_sync.server_timestamp = message["msg"]
-         #######################################################
-        # ---------------------for_realtime_candle______________
-        #######################################################
         elif message["name"] == "candle-generated":
             Active_name = list(OP_code.ACTIVES.keys())[list(
                 OP_code.ACTIVES.values()).index(message["msg"]["active_id"])]
@@ -101,10 +98,6 @@ class WebsocketClient(object):
             commission = message["msg"]["commission"]["value"]
             self.api.subscribe_commission_changed_data[instrument_type][Active_name][self.api.time_sync.server_timestamp] = int(
                 commission)
-
-        #######################################################
-        # ______________________________________________________
-        #######################################################
         elif message["name"] == "heartbeat":
             try:
                 self.api.heartbeat(message["msg"])
@@ -112,17 +105,14 @@ class WebsocketClient(object):
                 pass
         elif message["name"] == "balances":
             self.api.balances_raw = message
-
         elif message["name"] == "profile":
-            # --------------all-------------
             self.api.profile.msg = message["msg"]
+
             if self.api.profile.msg != False:
-                # ---------------------------
                 try:
                     self.api.profile.balance = message["msg"]["balance"]
                 except:
                     pass
-                # Set Default account
                 if global_value.balance_id == None:
                     for balance in message["msg"]["balances"]:
                         if balance["type"] == 4:
@@ -142,10 +132,9 @@ class WebsocketClient(object):
                     self.api.profile.balances = message["msg"]["balances"]
                 except:
                     pass
-
         elif message['name'] == 'balance-changed':
             balance = message['msg']['current_balance']
-            # if self.api.get_active_account_type() == balance['type']:
+
             try:
                 self.api.profile.balance = balance["amount"]
             except:
@@ -160,37 +149,26 @@ class WebsocketClient(object):
                 self.api.profile.balance_type = balance["type"]
             except:
                 pass
-
         elif message["name"] == "candles":
             try:
                 self.api.candles.candles_data = message["msg"]["candles"]
             except:
                 pass
-        # Make sure ""self.api.buySuccessful"" more stable
-        # check buySuccessful have two fail action
-        # if "user not authorized" we get buyV2_result !!!need to reconnect!!!
-        # elif "we have user authoget_balancerized" we get buyComplete
-        # I Suggest if you get selget_balancef.api.buy_successful==False you need to reconnect iqoption server
         elif message["name"] == "buyComplete":
             try:
                 self.api.buy_successful = message["msg"]["isSuccessful"]
                 self.api.buy_id = message["msg"]["result"]["id"]
             except:
                 pass
-        # *********************buyv3
-        # buy_multi_option
         elif message["name"] == "option":
             self.api.buy_multi_option[str(
                 message["request_id"])] = message["msg"]
-        # **********************************************************
         elif message["name"] == "listInfoData":
             for get_m in message["msg"]:
-                self.api.list_info_data.set(
-                    get_m["win"], get_m["game_state"], get_m["id"])
+                self.api.list_info_data.set(get_m["win"], get_m["game_state"], get_m["id"])
         elif message["name"] == "socket-option-opened":
             id = message["msg"]["id"]
             self.api.socket_option_opened[id] = message
-
         elif message["name"] == "api_option_init_all_result":
             self.api.api_option_init_all_result = message["msg"]
         elif message["name"] == "initialization-data":
@@ -209,20 +187,15 @@ class WebsocketClient(object):
             elif message["microserviceName"] == "portfolio" and message["msg"]["source"] == "binary-options":
                 self.api.order_async[int(
                     message["msg"]["external_id"])][message["name"]] = message
-                # print(message)
-
         elif message["name"] == "option-opened":
             self.api.order_async[int(
                 message["msg"]["option_id"])][message["name"]] = message
-
         elif message["name"] == "option-closed":
-
             self.api.order_async[int(
                 message["msg"]["option_id"])][message["name"]] = message
             if message["microserviceName"] == "binary-options":
                 self.api.order_binary[
                     message["msg"]["option_id"]] = message['msg']
-
         elif message["name"] == "top-assets-updated":
             self.api.top_assets_updated_data[str(
                 message["msg"]["instrument_type"])] = message["msg"]["data"]
@@ -235,9 +208,7 @@ class WebsocketClient(object):
             except:
                 pass
         elif message["name"] == "traders-mood-changed":
-            self.api.traders_mood[message["msg"]
-                                  ["asset_id"]] = message["msg"]["value"]
-        # ------for forex&cfd&crypto..
+            self.api.traders_mood[message["msg"]["asset_id"]] = message["msg"]["value"]
         elif message["name"] == "order-placed-temp":
             self.api.buy_order_id = message["msg"]["id"]
         elif message["name"] == "order":
@@ -248,12 +219,10 @@ class WebsocketClient(object):
             self.api.position = message
         elif message["name"] == "deferred-orders":
             self.api.deferred_orders = message
-
         elif message["name"] == "technical-indicators":
             if message["msg"].get("indicators") != None:
                 self.api_dict_clean(self.api.technical_indicators)
-                self.api.technical_indicators[message["request_id"]
-                                              ] = message["msg"]["indicators"]
+                self.api.technical_indicators[message["request_id"]] = message["msg"]["indicators"]
             else:
                 self.api.technical_indicators[message["request_id"]] = {
                     "code": "no_technical_indicator_available",
@@ -283,50 +252,39 @@ class WebsocketClient(object):
         elif message["name"] == "auto-margin-call-changed":
             self.api.auto_margin_call_changed_respond = message
         elif message["name"] == "digital-option-placed":
-            if message["msg"].get("id") != None:
+            if message["msg"].get("id") is not None:
                 self.api_dict_clean(self.api.digital_option_placed_id)
-                self.api.digital_option_placed_id[message["request_id"]
-                                                  ] = message["msg"]["id"]
+                self.api.digital_option_placed_id[message["request_id"]] = message["msg"]["id"]
             else:
                 self.api.digital_option_placed_id[message["request_id"]] = {
                     "code": "error_place_digital_order",
                     "message": message["msg"]["message"]
                 }
-
         elif message["name"] == "result":
             self.api.result = message["msg"]["success"]
         elif message["name"] == "instrument-quotes-generated":
-
             Active_name = list(OP_code.ACTIVES.keys())[list(
                 OP_code.ACTIVES.values()).index(message["msg"]["active"])]
             period = message["msg"]["expiration"]["period"]
             ans = {}
+
             for data in message["msg"]["quotes"]:
-                # FROM IQ OPTION SOURCE CODE
-                # https://github.com/Lu-Yi-Hsun/Decompiler-IQ-Option/blob/master/Source%20Code/5.5.1/sources/com/iqoption/dto/entity/strike/Quote.java#L91
                 if data["price"]["ask"] == None:
                     ProfitPercent = None
+
                 else:
                     askPrice = (float)(data["price"]["ask"])
                     ProfitPercent = ((100-askPrice)*100)/askPrice
 
                 for symble in data["symbols"]:
                     try:
-                        """
-                        ID SAMPLE:doUSDJPY-OTC201811111204PT1MC11350481
-                        """
-
-                        """
-                        dict ID-prodit:{ID:profit}
-                        """
-
                         ans[symble] = ProfitPercent
                     except:
                         pass
+
             self.api.instrument_quites_generated_timestamp[Active_name][
                 period] = message["msg"]["expiration"]["timestamp"]
             self.api.instrument_quites_generated_data[Active_name][period] = ans
-
             self.api.instrument_quotes_generated_raw_data[Active_name][period] = message
         elif message["name"] == "training-balance-reset":
             self.api.training_balance_reset_request = message["msg"]["isSuccessful"]
@@ -339,6 +297,7 @@ class WebsocketClient(object):
             active = list(OP_code.ACTIVES.keys())[
                 list(OP_code.ACTIVES.values()).index(active_id)]
             _type = message["msg"]["option_type"]
+
             try:
                 self.api.live_deal_data[name][active][_type].appendleft(
                     message["msg"])
@@ -359,6 +318,7 @@ class WebsocketClient(object):
             active = list(OP_code.ACTIVES.keys())[
                 list(OP_code.ACTIVES.values()).index(active_id)]
             _type = message["msg"]["expiration_type"]
+
             try:
                 self.api.live_deal_data[name][active][_type].appendleft(
                     message["msg"])
@@ -373,7 +333,6 @@ class WebsocketClient(object):
                     realdigital.start()
             except:
                 pass
-
         elif message["name"] == "leaderboard-deals-client":
             self.api.leaderboard_deals_client = message["msg"]
         elif message["name"] == "live-deal":
@@ -382,12 +341,12 @@ class WebsocketClient(object):
             active = list(OP_code.ACTIVES.keys())[
                 list(OP_code.ACTIVES.values()).index(active_id)]
             _type = message["msg"]["instrument_type"]
+
             try:
                 self.api.live_deal_data[name][active][_type].appendleft(
                     message["msg"])
             except:
                 pass
-
         elif message["name"] == "user-profile-client":
             self.api.user_profile_client = message["msg"]
         elif message["name"] == "leaderboard-userinfo-deals-client":
