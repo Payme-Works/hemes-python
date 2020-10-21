@@ -180,22 +180,22 @@ class WebsocketClient(object):
         elif message["name"] == "financial-information":
             self.api.financial_information = message
         elif message["name"] == "position-changed":
-
             if message["microserviceName"] == "portfolio" and (message["msg"]["source"] == "digital-options") or message["msg"]["source"] == "trading":
-                self.api.order_async[int(
-                    message["msg"]["raw_event"]["order_ids"][0])][message["name"]] = message
+                self.api.order_async[int(message["msg"]["raw_event"]["order_ids"][0])][
+                    message["name"]] = message
             elif message["microserviceName"] == "portfolio" and message["msg"]["source"] == "binary-options":
-                self.api.order_async[int(
-                    message["msg"]["external_id"])][message["name"]] = message
+                self.api.order_async[int(message["msg"]["external_id"])][message["name"]] = message
         elif message["name"] == "option-opened":
             self.api.order_async[int(
                 message["msg"]["option_id"])][message["name"]] = message
         elif message["name"] == "option-closed":
-            self.api.order_async[int(
-                message["msg"]["option_id"])][message["name"]] = message
+            option_id = int(message["msg"]["option_id"])
+
+            self.api.order_async[option_id][message["name"]] = message
+            self.api.closed_options[option_id] = message["msg"]
+
             if message["microserviceName"] == "binary-options":
-                self.api.order_binary[
-                    message["msg"]["option_id"]] = message['msg']
+                self.api.order_binary[message["msg"]["option_id"]] = message['msg']
         elif message["name"] == "top-assets-updated":
             self.api.top_assets_updated_data[str(
                 message["msg"]["instrument_type"])] = message["msg"]["data"]

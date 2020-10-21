@@ -53,7 +53,7 @@ class TestBinaryOption(unittest.TestCase):
 
         i_want_money.get_all_profit()
 
-        is_successful = i_want_money.get_betinfo(id_put)
+        is_successful = i_want_money.get_bet_info(id_put)
 
         self.assertTrue(is_successful)
 

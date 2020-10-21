@@ -671,7 +671,17 @@ class StableHermes:
 
         return your_order
 
-    def check_win(self, id_number):
+    def wait_for_order_close(self, order_id):
+        while True:
+            try:
+                return self.api.closed_options[order_id]
+            except:
+                pass
+
+    def wait_for_result(self, order_id):
+        return self.wait_for_order_close(order_id)["result"]
+
+    def check_win_old(self, id_number):
         while True:
             try:
                 list_info_data_dict = self.api.list_info_data.get(id_number)
@@ -684,6 +694,9 @@ class StableHermes:
         self.api.list_info_data.delete(id_number)
 
         return list_info_data_dict["win"]
+
+    def check_win(self, order_id):
+        return self.wait_for_result(order_id) == "win"
 
     def check_win_v2(self, id_number, polling_time=1):
         while True:
@@ -1266,10 +1279,9 @@ class StableHermes:
         return self.api.order_async[buy_order_id]
 
     def get_order(self, buy_order_id):
-        # reject:you can not get this order
-        # pending_new:this order is working now
-        # filled:this order is ok now
-
+        # reject: you can not get this order
+        # pending_new: this order is working now
+        # filled: this order is ok now
         self.api.order_data = None
         self.api.get_order(buy_order_id)
 
