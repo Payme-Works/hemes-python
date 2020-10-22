@@ -732,7 +732,7 @@ class StableHermes:
 
     def check_win_v3(self, id_number):
         while True:
-            result = self.get_option_info_v2(10)
+            result = self.get_history(10)
 
             if result['msg']['closed_options'][0]['id'][0] == id_number and result['msg']['closed_options'][0]['id'][
                     0] is not None:
@@ -774,7 +774,7 @@ class StableHermes:
 
         return self.api.api_game_get_options_result
 
-    def get_option_info_v2(self, limit):
+    def get_history(self, limit):
         self.api.get_options_v2_data = None
         self.api.get_options_v2(limit, "binary,turbo")
 
