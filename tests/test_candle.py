@@ -23,7 +23,7 @@ class TestCandle(unittest.TestCase):
         self.assertEqual(i_want_money.check_connect(), True)
 
         # start test binary option
-        all_asset = i_want_money.get_all_open_time()
+        all_asset = i_want_money.get_all_open_actives()
 
         if all_asset["turbo"]["EURUSD"]["open"]:
             actives = "EURUSD"

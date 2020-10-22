@@ -1,3 +1,4 @@
+from threading import active_count
 import time
 import json
 import logging
@@ -22,9 +23,9 @@ def nested_dict(n, type):
 
 
 class StableHermes:
-    __version__ = "1.0.0"
+    __version__ = '1.0.0'
 
-    def __init__(self, email, password, balance_mode="PRACTICE"):
+    def __init__(self, email, password, balance_mode='PRACTICE'):
         self.size = [1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800,
                      3600, 7200, 14400, 28800, 43200, 86400, 604800, 2592000]
         self.email = email
@@ -43,8 +44,8 @@ class StableHermes:
         self.resp_sms = None
 
         self.SESSION_HEADER = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/66.0.3359.139 Safari/537.36"
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/66.0.3359.139 Safari/537.36'
         }
         self.SESSION_COOKIE = {}
 
@@ -57,7 +58,7 @@ class StableHermes:
     def resubscribe_stream(self):
         try:
             for ac in self.subscribe_candle:
-                sp = ac.split(",")
+                sp = ac.split(',')
                 self.start_candles_one_stream(sp[0], sp[1])
         except:
             pass
@@ -84,7 +85,7 @@ class StableHermes:
         except:
             pass
 
-        self.api = Hermes("iqoption.com", self.email, self.password)
+        self.api = Hermes('iqoption.com', self.email, self.password)
         check = None
 
         if sms_code is not None:
@@ -109,9 +110,9 @@ class StableHermes:
                 pass
 
             self.position_change_all(
-                "subscribeMessage", global_value.balance_id)
+                'subscribeMessage', global_value.balance_id)
 
-            self.order_changed_all("subscribeMessage")
+            self.order_changed_all('subscribeMessage')
             self.api.set_options(1, True)
 
             return True, None
@@ -124,7 +125,7 @@ class StableHermes:
 
                 self.resp_sms = response
 
-                return False, "2FA"
+                return False, '2FA'
 
             return False, reason
 
@@ -157,13 +158,13 @@ class StableHermes:
         info = self.get_financial_information(active_id)
 
         try:
-            return info["msg"]["data"]["active"]["name"]
+            return info['msg']['data']['active']['name']
         except:
             return None
 
-    def get_financial_information(self, active_id):
+    def get_financial_information(self, active):
         self.api.financial_information = None
-        self.api.get_financial_information(active_id)
+        self.api.get_financial_information(codes.ACTIVES[active])
 
         while self.api.financial_information is None:
             pass
@@ -205,20 +206,20 @@ class StableHermes:
     def instruments_input_to_actives(self, type):
         instruments = self.get_instruments(type)
 
-        for ins in instruments["instruments"]:
-            codes.ACTIVES[ins["id"]] = ins["active_id"]
+        for ins in instruments['instruments']:
+            codes.ACTIVES[ins['id']] = ins['active_id']
 
     def instruments_input_all_in_actives(self):
-        self.instruments_input_to_actives("crypto")
-        self.instruments_input_to_actives("forex")
-        self.instruments_input_to_actives("cfd")
+        self.instruments_input_to_actives('crypto')
+        self.instruments_input_to_actives('forex')
+        self.instruments_input_to_actives('cfd')
 
     def get_all_binary_actives_opcode(self):
         init_info = self.get_all_init()
 
-        for dirr in (["binary", "turbo"]):
-            for i in init_info["result"][dirr]["actives"]:
-                codes.ACTIVES[(init_info["result"][dirr]["actives"][i]["name"]).split(".")[1]] = int(i)
+        for dirr in (['binary', 'turbo']):
+            for i in init_info['result'][dirr]['actives']:
+                codes.ACTIVES[(init_info['result'][dirr]['actives'][i]['name']).split('.')[1]] = int(i)
 
     def get_all_init(self):
         while True:
@@ -247,7 +248,7 @@ class StableHermes:
                     pass
 
             try:
-                if self.api.api_option_init_all_result["isSuccessful"]:
+                if self.api.api_option_init_all_result['isSuccessful']:
                     return self.api.api_option_init_all_result
             except:
                 pass
@@ -269,53 +270,53 @@ class StableHermes:
 
         return self.api.api_option_init_all_result_v2
 
-    def get_all_open_time(self):
+    def get_all_open_actives(self):
         open_time = nested_dict(3, dict)
         binary_data = self.get_all_init_v2()
-        binary_list = ["binary", "turbo"]
+        binary_list = ['binary', 'turbo']
 
         for option in binary_list:
-            for actives_id in binary_data[option]["actives"]:
-                active = binary_data[option]["actives"][actives_id]
-                name = str(active["name"]).split(".")[1]
+            for actives_id in binary_data[option]['actives']:
+                active = binary_data[option]['actives'][actives_id]
+                name = str(active['name']).split('.')[1]
 
-                if active["enabled"]:
-                    if active["is_suspended"]:
-                        open_time[option][name]["open"] = False
+                if active['enabled']:
+                    if active['is_suspended']:
+                        open_time[option][name] = False
                     else:
-                        open_time[option][name]["open"] = True
+                        open_time[option][name] = True
                 else:
-                    open_time[option][name]["open"] = active["enabled"]
+                    open_time[option][name] = active['enabled']
 
-        digital_data = self.get_digital_underlying_list_data()["underlying"]
+        digital_data = self.get_digital_underlying_list_data()['underlying']
 
         for digital in digital_data:
-            name = digital["underlying"]
-            schedule = digital["schedule"]
-            open_time["digital"][name]["open"] = False
+            name = digital['underlying']
+            schedule = digital['schedule']
+            open_time['digital'][name] = False
 
             for schedule_time in schedule:
-                start = schedule_time["open"]
-                end = schedule_time["close"]
+                start = schedule_time['open']
+                end = schedule_time['close']
 
                 if start < time.time() < end:
-                    open_time["digital"][name]["open"] = True
+                    open_time['digital'][name] = True
 
-        instrument_list = ["cfd", "forex", "crypto"]
+        instrument_list = ['cfd', 'forex', 'crypto']
 
         for instruments_type in instrument_list:
-            ins_data = self.get_instruments(instruments_type)["instruments"]
+            ins_data = self.get_instruments(instruments_type)['instruments']
 
             for detail in ins_data:
-                name = detail["name"]
-                schedule = detail["schedule"]
-                open_time[instruments_type][name]["open"] = False
+                name = detail['name']
+                schedule = detail['schedule']
+                open_time[instruments_type][name] = False
 
                 for schedule_time in schedule:
-                    start = schedule_time["open"]
-                    end = schedule_time["close"]
+                    start = schedule_time['open']
+                    end = schedule_time['close']
                     if start < time.time() < end:
-                        open_time[instruments_type][name]["open"] = True
+                        open_time[instruments_type][name] = True
 
         return open_time
 
@@ -323,15 +324,15 @@ class StableHermes:
         detail = nested_dict(2, dict)
         init_info = self.get_all_init()
 
-        for actives in init_info["result"]["turbo"]["actives"]:
-            name = init_info["result"]["turbo"]["actives"][actives]["name"]
-            name = name[name.index(".") + 1:len(name)]
-            detail[name]["turbo"] = init_info["result"]["turbo"]["actives"][actives]
+        for actives in init_info['result']['turbo']['actives']:
+            name = init_info['result']['turbo']['actives'][actives]['name']
+            name = name[name.index('.') + 1:len(name)]
+            detail[name]['turbo'] = init_info['result']['turbo']['actives'][actives]
 
-        for actives in init_info["result"]["binary"]["actives"]:
-            name = init_info["result"]["binary"]["actives"][actives]["name"]
-            name = name[name.index(".") + 1:len(name)]
-            detail[name]["binary"] = init_info["result"]["binary"]["actives"][actives]
+        for actives in init_info['result']['binary']['actives']:
+            name = init_info['result']['binary']['actives'][actives]['name']
+            name = name[name.index('.') + 1:len(name)]
+            detail[name]['binary'] = init_info['result']['binary']['actives'][actives]
 
         return detail
 
@@ -339,17 +340,17 @@ class StableHermes:
         all_profit = nested_dict(2, dict)
         init_info = self.get_all_init()
 
-        for actives in init_info["result"]["turbo"]["actives"]:
-            name = init_info["result"]["turbo"]["actives"][actives]["name"]
-            name = name[name.index(".") + 1:len(name)]
-            all_profit[name]["turbo"] = (100.0 - init_info["result"]["turbo"]["actives"][actives]["option"]["profit"][
-                                                "commission"]) / 100.0
+        for actives in init_info['result']['turbo']['actives']:
+            name = init_info['result']['turbo']['actives'][actives]['name']
+            name = name[name.index('.') + 1:len(name)]
+            all_profit[name]['turbo'] = (100.0 - init_info['result']['turbo']['actives'][actives]['option']['profit'][
+                                                'commission']) / 100.0
 
-        for actives in init_info["result"]["binary"]["actives"]:
-            name = init_info["result"]["binary"]["actives"][actives]["name"]
-            name = name[name.index(".") + 1:len(name)]
-            all_profit[name]["binary"] = (100.0 - init_info["result"]["binary"]["actives"][actives]["option"]["profit"][
-                                                 "commission"]) / 100.0
+        for actives in init_info['result']['binary']['actives']:
+            name = init_info['result']['binary']['actives'][actives]['name']
+            name = name[name.index('.') + 1:len(name)]
+            all_profit[name]['binary'] = (100.0 - init_info['result']['binary']['actives'][actives]['option']['profit'][
+                                                 'commission']) / 100.0
 
         return all_profit
 
@@ -362,9 +363,9 @@ class StableHermes:
     def get_currency(self):
         balances_raw = self.get_balances()
 
-        for balance in balances_raw["msg"]:
-            if balance["id"] == global_value.balance_id:
-                return balance["currency"]
+        for balance in balances_raw['msg']:
+            if balance['id'] == global_value.balance_id:
+                return balance['currency']
 
     @staticmethod
     def get_balance_id():
@@ -373,9 +374,9 @@ class StableHermes:
     def get_balance(self):
 
         balances_raw = self.get_balances()
-        for balance in balances_raw["msg"]:
-            if balance["id"] == global_value.balance_id:
-                return balance["amount"]
+        for balance in balances_raw['msg']:
+            if balance['id'] == global_value.balance_id:
+                return balance['amount']
 
     def get_balances(self):
         self.api.balances_raw = None
@@ -392,14 +393,14 @@ class StableHermes:
     def get_balance_mode(self):
         profile = self.get_profile_async()
 
-        for balance in profile.get("balances"):
-            if balance["id"] == global_value.balance_id:
-                if balance["type"] == 1:
-                    return "REAL"
-                elif balance["type"] == 4:
-                    return "PRACTICE"
-                elif balance["type"] == 2:
-                    return "TOURNAMENT"
+        for balance in profile.get('balances'):
+            if balance['id'] == global_value.balance_id:
+                if balance['type'] == 1:
+                    return 'REAL'
+                elif balance['type'] == 4:
+                    return 'PRACTICE'
+                elif balance['type'] == 2:
+                    return 'TOURNAMENT'
 
     def reset_practice_balance(self):
         self.api.training_balance_reset_request = None
@@ -411,46 +412,46 @@ class StableHermes:
         return self.api.training_balance_reset_request
 
     def position_change_all(self, main_name, user_balance_id):
-        instrument_type = ["cfd", "forex", "crypto",
-                           "digital-option", "turbo-option", "binary-option"]
+        instrument_type = ['cfd', 'forex', 'crypto',
+                           'digital-option', 'turbo-option', 'binary-option']
         for ins in instrument_type:
-            self.api.portfolio(main_name=main_name, name="portfolio.position-changed",
+            self.api.portfolio(main_name=main_name, name='portfolio.position-changed',
                                instrument_type=ins, user_balance_id=user_balance_id)
 
     def order_changed_all(self, main_name):
-        instrument_type = ["cfd", "forex", "crypto",
-                           "digital-option", "turbo-option", "binary-option"]
+        instrument_type = ['cfd', 'forex', 'crypto',
+                           'digital-option', 'turbo-option', 'binary-option']
         for ins in instrument_type:
             self.api.portfolio(
-                main_name=main_name, name="portfolio.order-changed", instrument_type=ins)
+                main_name=main_name, name='portfolio.order-changed', instrument_type=ins)
 
     def change_balance(self, balance_mode):
         def set_id(b_id):
             if global_value.balance_id is not None:
                 self.position_change_all(
-                    "unsubscribeMessage", global_value.balance_id)
+                    'unsubscribeMessage', global_value.balance_id)
 
             global_value.balance_id = b_id
 
-            self.position_change_all("subscribeMessage", b_id)
+            self.position_change_all('subscribeMessage', b_id)
 
         real_id = None
         practice_id = None
         tournament_id = None
 
-        for balance in self.get_profile_async()["balances"]:
-            if balance["type"] == 1:
-                real_id = balance["id"]
-            if balance["type"] == 4:
-                practice_id = balance["id"]
-            if balance["type"] == 2:
-                tournament_id = balance["id"]
+        for balance in self.get_profile_async()['balances']:
+            if balance['type'] == 1:
+                real_id = balance['id']
+            if balance['type'] == 4:
+                practice_id = balance['id']
+            if balance['type'] == 2:
+                tournament_id = balance['id']
 
-        if balance_mode == "REAL":
+        if balance_mode == 'REAL':
             set_id(real_id)
-        elif balance_mode == "PRACTICE":
+        elif balance_mode == 'PRACTICE':
             set_id(practice_id)
-        elif balance_mode == "TOURNAMENT":
+        elif balance_mode == 'TOURNAMENT':
             set_id(tournament_id)
         else:
             logging.error("ERROR doesn't have this mode")
@@ -474,7 +475,7 @@ class StableHermes:
         return self.api.candles.candles_data
 
     def start_candles_stream(self, active, size, max_dict):
-        if size == "all":
+        if size == 'all':
             for s in self.size:
                 self.full_realtime_get_candle(active, s, max_dict)
                 self.api.real_time_candles_max_dict_table[active][s] = max_dict
@@ -488,7 +489,7 @@ class StableHermes:
                 '**error** start_candles_stream please input right size')
 
     def stop_candles_stream(self, active, size):
-        if size == "all":
+        if size == 'all':
             self.stop_candles_all_size_stream(active)
         elif size in self.size:
             self.stop_candles_one_stream(active, size)
@@ -497,12 +498,12 @@ class StableHermes:
                 '**error** start_candles_stream please input right size')
 
     def get_realtime_candles(self, active, size):
-        if size == "all":
+        if size == 'all':
             try:
                 return self.api.real_time_candles[active]
             except:
-                logging.error(
-                    '**error** get_realtime_candles() size="all" can not get candle')
+                logging.error("**error** get_realtime_candles() size='all' can not get candle")
+
                 return False
         elif size in self.size:
             try:
@@ -512,8 +513,7 @@ class StableHermes:
                     '**error** get_realtime_candles() size=' + str(size) + ' can not get candle')
                 return False
         else:
-            logging.error(
-                '**error** get_realtime_candles() please input right "size"')
+            logging.error("**error** get_realtime_candles() please input right 'size'")
 
     def get_all_realtime_candles(self):
         return self.api.real_time_candles
@@ -522,11 +522,11 @@ class StableHermes:
         candles = self.get_candles(active, size, max_dict, self.api.time_sync.server_timestamp)
 
         for can in candles:
-            self.api.real_time_candles[str(active)][int(size)][can["from"]] = can
+            self.api.real_time_candles[str(active)][int(size)][can['from']] = can
 
     def start_candles_one_stream(self, active, size):
-        if not (str(active + "," + str(size)) in self.subscribe_candle):
-            self.subscribe_candle.append((active + "," + str(size)))
+        if not (str(active + ',' + str(size)) in self.subscribe_candle):
+            self.subscribe_candle.append((active + ',' + str(size)))
 
         start = time.time()
         self.api.candle_generated_check[str(active)][int(size)] = {}
@@ -552,8 +552,8 @@ class StableHermes:
             time.sleep(1)
 
     def stop_candles_one_stream(self, active, size):
-        if (active + "," + str(size)) in self.subscribe_candle:
-            self.subscribe_candle.remove(active + "," + str(size))
+        if (active + ',' + str(size)) in self.subscribe_candle:
+            self.subscribe_candle.remove(active + ',' + str(size))
         while True:
             try:
                 if self.api.candle_generated_check[str(active)][int(size)] == {}:
@@ -630,7 +630,7 @@ class StableHermes:
     def get_commission_change(self, instrument_type):
         return self.api.subscribe_commission_changed_data[instrument_type]
 
-    def start_mood_stream(self, actives, instrument="turbo-option"):
+    def start_mood_stream(self, actives, instrument='turbo-option'):
         if actives not in self.subscribe_mood:
             self.subscribe_mood.append(actives)
 
@@ -643,7 +643,7 @@ class StableHermes:
             except:
                 time.sleep(5)
 
-    def stop_mood_stream(self, actives, instrument="turbo-option"):
+    def stop_mood_stream(self, actives, instrument='turbo-option'):
         if actives in self.subscribe_mood:
             del self.subscribe_mood[actives]
         self.api.unsubscribe_traders_mood(codes.ACTIVES[actives], instrument)
@@ -679,36 +679,36 @@ class StableHermes:
                 pass
 
     def wait_for_result(self, order_id):
-        return self.wait_for_order_close(order_id)["result"]
+        return self.wait_for_order_close(order_id)['result']
 
     def check_win_old(self, id_number):
         while True:
             try:
                 list_info_data_dict = self.api.list_info_data.get(id_number)
 
-                if list_info_data_dict["game_state"] == 1:
+                if list_info_data_dict['game_state'] == 1:
                     break
             except:
                 pass
 
         self.api.list_info_data.delete(id_number)
 
-        return list_info_data_dict["win"]
+        return list_info_data_dict['win']
 
     def check_win(self, order_id):
-        return self.wait_for_result(order_id) == "win"
+        return self.wait_for_result(order_id) == 'win'
 
     def check_win_v2(self, id_number, polling_time=1):
         while True:
             check, data = self.get_bet_info(id_number)
 
             if check:
-                win = data["result"]["data"][str(id_number)]["win"]
+                win = data['result']['data'][str(id_number)]['win']
 
-                if win != "":
+                if win != '':
                     try:
-                        return data["result"]["data"][str(id_number)]["profit"] - data["result"]["data"][
-                            str(id_number)]["deposit"]
+                        return data['result']['data'][str(id_number)]['profit'] - data['result']['data'][
+                            str(id_number)]['deposit']
                     except IndexError:
                         pass
             else:
@@ -776,7 +776,7 @@ class StableHermes:
 
     def get_history(self, limit):
         self.api.get_options_v2_data = None
-        self.api.get_options_v2(limit, "digital-option,binary,turbo")
+        self.api.get_options_v2(limit, 'digital-option,binary,turbo')
 
         while self.api.get_options_v2_data is None:
             pass
@@ -807,7 +807,7 @@ class StableHermes:
             for key in sorted(self.api.buy_multi_option.keys()):
                 try:
                     value = self.api.buy_multi_option[str(key)]
-                    buy_ids.append(value["id"])
+                    buy_ids.append(value['id'])
                 except:
                     buy_ids.append(None)
 
@@ -822,16 +822,16 @@ class StableHermes:
 
         logging.error('get_remaning(self,duration) ERROR duration')
 
-        return "ERROR duration"
+        return 'ERROR duration'
 
     def buy_by_raw_expirations(self, price, active, direction, option, expired):
         self.api.buy_multi_option = {}
         self.api.buy_successful = None
 
-        req_id = "buyraw"
+        req_id = 'buyraw'
 
         try:
-            self.api.buy_multi_option[req_id]["id"] = None
+            self.api.buy_multi_option[req_id]['id'] = None
         except:
             pass
 
@@ -845,15 +845,15 @@ class StableHermes:
 
         while self.api.result is None or id is None:
             try:
-                if "message" in self.api.buy_multi_option[req_id].keys():
+                if 'message' in self.api.buy_multi_option[req_id].keys():
                     logging.error(
-                        '**warning** buy' + str(self.api.buy_multi_option[req_id]["message"]))
-                    return False, self.api.buy_multi_option[req_id]["message"]
+                        '**warning** buy' + str(self.api.buy_multi_option[req_id]['message']))
+                    return False, self.api.buy_multi_option[req_id]['message']
             except:
                 pass
 
             try:
-                id = self.api.buy_multi_option[req_id]["id"]
+                id = self.api.buy_multi_option[req_id]['id']
             except:
                 pass
 
@@ -861,7 +861,7 @@ class StableHermes:
                 logging.error('**warning** buy late 5 sec')
                 return False, None
 
-        return self.api.result, self.api.buy_multi_option[req_id]["id"]
+        return self.api.result, self.api.buy_multi_option[req_id]['id']
 
     def buy(self, data):
         if type(data) is list:
@@ -879,7 +879,7 @@ class StableHermes:
         req_id = str(randint(0, 10000))
 
         try:
-            self.api.buy_multi_option[req_id]["id"] = None
+            self.api.buy_multi_option[req_id]['id'] = None
         except:
             pass
 
@@ -893,13 +893,13 @@ class StableHermes:
 
         while self.api.result is None or id is None:
             try:
-                if "message" in self.api.buy_multi_option[req_id].keys():
-                    return False, self.api.buy_multi_option[req_id]["message"]
+                if 'message' in self.api.buy_multi_option[req_id].keys():
+                    return False, self.api.buy_multi_option[req_id]['message']
             except:
                 pass
 
             try:
-                id = self.api.buy_multi_option[req_id]["id"]
+                id = self.api.buy_multi_option[req_id]['id']
             except:
                 pass
 
@@ -907,7 +907,7 @@ class StableHermes:
                 logging.error('**warning** buy late 5 sec')
                 return False, None
 
-        return self.api.result, self.api.buy_multi_option[req_id]["id"]
+        return self.api.result, self.api.buy_multi_option[req_id]['id']
 
     def sell_option(self, options_id):
         self.api.sell_option(options_id)
@@ -950,12 +950,12 @@ class StableHermes:
             pass
 
         try:
-            for data in self.api.strike_list["msg"]["strike"]:
+            for data in self.api.strike_list['msg']['strike']:
                 temp = {
-                    "call": data["call"]["id"],
-                    "put": data["put"]["id"]
+                    'call': data['call']['id'],
+                    'put': data['put']['id']
                 }
-                ans[("%.6f" % (float(data["value"]) * 10e-7))] = temp
+                ans[('%.6f' % (float(data['value']) * 10e-7))] = temp
         except:
             logging.error('**error** get_strike_list read problem...')
             return self.api.strike_list, None
@@ -990,7 +990,7 @@ class StableHermes:
             if self.get_realtime_strike_list_temp_data == {} \
                     or now_timestamp != self.get_realtime_strike_list_temp_expiration:
                 raw_data, strike_list = self.get_strike_list(active, duration)
-                self.get_realtime_strike_list_temp_expiration = raw_data["msg"]["expiration"]
+                self.get_realtime_strike_list_temp_expiration = raw_data['msg']['expiration']
                 self.get_realtime_strike_list_temp_data = strike_list
             else:
                 strike_list = self.get_realtime_strike_list_temp_data
@@ -1004,8 +1004,8 @@ class StableHermes:
                     for side_key in strike_list[price_key]:
                         detail_data = {}
                         profit_d = profit[strike_list[price_key][side_key]]
-                        detail_data["profit"] = profit_d
-                        detail_data["id"] = strike_list[price_key][side_key]
+                        detail_data['profit'] = profit_d
+                        detail_data['id'] = strike_list[price_key][side_key]
                         side_data[side_key] = detail_data
 
                     ans[price_key] = side_data
@@ -1014,12 +1014,43 @@ class StableHermes:
 
         return ans
 
-    def get_digital_current_profit(self, ACTIVE, duration):
-        profit = self.api.instrument_quites_generated_data[ACTIVE][duration * 60]
+
+    def get_binary_active_profit(self, active, duration):
+        instrument = 'turbo'
+
+        if duration >= 5:
+            instrument = 'binary'
+
+        data = self.get_all_init_v2()
+
+        for active_id in data[instrument]['actives']:
+            active_data = data[instrument]['actives'][active_id]
+            name = active_data['name'].replace('/', '')
+
+            if name == f'front.{active}':
+                commission =  active_data['option']['profit']['commission']
+
+                return 100 - commission
+
+        return -1
+
+
+    def get_digital_active_profit(self, active, duration):
+        self.subscribe_strike_list(active, duration)
+
+        profit = self.api.instrument_quites_generated_data[active][duration * 60]
+
+        while len(profit) == 0:
+            profit = self.api.instrument_quites_generated_data[active][duration * 60]
+            pass
+
+        self.unsubscribe_strike_list(active, duration)
+
         for key in profit:
-            if key.find("SPT") != -1:
-                return profit[key]
-        return False
+            if key.find('SPT') != -1:
+                return int(format(profit[key], '.0f'))
+
+        return -1
 
     def buy_digital_spot(self, active, amount, action, duration):
         # Expiration time need to be formatted like this: YYYYMMDDHHII
@@ -1046,8 +1077,8 @@ class StableHermes:
 
             exp = time.mktime(now_date.timetuple())
 
-        date_formatted = str(datetime.utcfromtimestamp(exp).strftime("%Y%m%d%H%M"))
-        instrument_id = "do" + active + date_formatted + "PT" + str(duration) + "M" + action + "SPT"
+        date_formatted = str(datetime.utcfromtimestamp(exp).strftime('%Y%m%d%H%M'))
+        instrument_id = 'do' + active + date_formatted + 'PT' + str(duration) + 'M' + action + 'SPT'
 
         request_id = self.api.place_digital_option(instrument_id, amount)
 
@@ -1063,41 +1094,41 @@ class StableHermes:
 
     def get_digital_spot_profit_after_sale(self, position_id):
         def get_instrument_id_to_bid(data, instrument_id):
-            for row in data["msg"]["quotes"]:
-                if row["symbols"][0] == instrument_id:
-                    return row["price"]["bid"]
+            for row in data['msg']['quotes']:
+                if row['symbols'][0] == instrument_id:
+                    return row['price']['bid']
             return None
 
-        while self.get_async_order(position_id)["position-changed"] == {}:
+        while self.get_async_order(position_id)['position-changed'] == {}:
             pass
 
-        position = self.get_async_order(position_id)["position-changed"]["msg"]
+        position = self.get_async_order(position_id)['position-changed']['msg']
 
-        if position["instrument_id"].find("MPSPT"):
+        if position['instrument_id'].find('MPSPT'):
             z = False
-        elif position["instrument_id"].find("MCSPT"):
+        elif position['instrument_id'].find('MCSPT'):
             z = True
         else:
             logging.error(
-                'get_digital_spot_profit_after_sale position error' + str(position["instrument_id"]))
+                'get_digital_spot_profit_after_sale position error' + str(position['instrument_id']))
 
         actives = position['raw_event']['instrument_underlying']
-        amount = max(position['raw_event']["buy_amount"],
-                     position['raw_event']["sell_amount"])
-        start_duration = position["instrument_id"].find("PT") + 2
-        end_duration = start_duration + position["instrument_id"][start_duration:].find("M")
+        amount = max(position['raw_event']['buy_amount'],
+                     position['raw_event']['sell_amount'])
+        start_duration = position['instrument_id'].find('PT') + 2
+        end_duration = start_duration + position['instrument_id'][start_duration:].find('M')
 
-        duration = int(position["instrument_id"][start_duration:end_duration])
+        duration = int(position['instrument_id'][start_duration:end_duration])
         z2 = False
 
-        get_abs_count = position['raw_event']["count"]
-        instrument_strike_value = position['raw_event']["instrument_strike_value"] / 1000000.0
-        spot_lower_instrument_strike = position['raw_event']["extra_data"]["lower_instrument_strike"] / 1000000.0
-        spot_upper_instrument_strike = position['raw_event']["extra_data"]["upper_instrument_strike"] / 1000000.0
+        get_abs_count = position['raw_event']['count']
+        instrument_strike_value = position['raw_event']['instrument_strike_value'] / 1000000.0
+        spot_lower_instrument_strike = position['raw_event']['extra_data']['lower_instrument_strike'] / 1000000.0
+        spot_upper_instrument_strike = position['raw_event']['extra_data']['upper_instrument_strike'] / 1000000.0
 
-        a_var = position['raw_event']["extra_data"]["lower_instrument_id"]
-        a_var2 = position['raw_event']["extra_data"]["upper_instrument_id"]
-        get_rate = position['raw_event']["currency_rate"]
+        a_var = position['raw_event']['extra_data']['lower_instrument_id']
+        a_var2 = position['raw_event']['extra_data']['upper_instrument_id']
+        get_rate = position['raw_event']['currency_rate']
 
         instrument_quites_generated_data = self.get_instrument_quites_generated_data(
             actives, duration)
@@ -1106,19 +1137,19 @@ class StableHermes:
             instrument_quites_generated_data, a_var)
 
         if f_tmp is not None:
-            self.get_digital_spot_profit_after_sale_data[position_id]["f"] = f_tmp
+            self.get_digital_spot_profit_after_sale_data[position_id]['f'] = f_tmp
             f = f_tmp
         else:
-            f = self.get_digital_spot_profit_after_sale_data[position_id]["f"]
+            f = self.get_digital_spot_profit_after_sale_data[position_id]['f']
 
         f2_tmp = get_instrument_id_to_bid(
             instrument_quites_generated_data, a_var2)
 
         if f2_tmp is not None:
-            self.get_digital_spot_profit_after_sale_data[position_id]["f2"] = f2_tmp
+            self.get_digital_spot_profit_after_sale_data[position_id]['f2'] = f2_tmp
             f2 = f2_tmp
         else:
-            f2 = self.get_digital_spot_profit_after_sale_data[position_id]["f2"]
+            f2 = self.get_digital_spot_profit_after_sale_data[position_id]['f2']
 
         if (spot_lower_instrument_strike != instrument_strike_value) and f is not None and f2 is not None:
 
@@ -1165,12 +1196,12 @@ class StableHermes:
     def close_digital_option(self, position_id):
         self.api.result = None
 
-        while self.get_async_order(position_id)["position-changed"] == {}:
+        while self.get_async_order(position_id)['position-changed'] == {}:
             pass
 
         position_changed = self.get_async_order(
-            position_id)["position-changed"]["msg"]
-        self.api.close_digital_option(position_changed["external_id"])
+            position_id)['position-changed']['msg']
+        self.api.close_digital_option(position_changed['external_id'])
 
         while self.api.result is None:
             pass
@@ -1182,25 +1213,25 @@ class StableHermes:
             time.sleep(polling_time)
             data = self.get_digital_position(buy_order_id)
 
-            if data["msg"]["position"]["status"] == "closed":
-                if data["msg"]["position"]["close_reason"] == "default":
-                    return data["msg"]["position"]["pnl_realized"]
-                elif data["msg"]["position"]["close_reason"] == "expired":
-                    return data["msg"]["position"]["pnl_realized"] - data["msg"]["position"]["buy_amount"]
+            if data['msg']['position']['status'] == 'closed':
+                if data['msg']['position']['close_reason'] == 'default':
+                    return data['msg']['position']['pnl_realized']
+                elif data['msg']['position']['close_reason'] == 'expired':
+                    return data['msg']['position']['pnl_realized'] - data['msg']['position']['buy_amount']
 
     def check_win_digital_v2(self, buy_order_id):
-        while self.get_async_order(buy_order_id)["position-changed"] == {}:
+        while self.get_async_order(buy_order_id)['position-changed'] == {}:
             pass
 
         order_data = self.get_async_order(
-            buy_order_id)["position-changed"]["msg"]
+            buy_order_id)['position-changed']['msg']
 
         if order_data is not None:
-            if order_data["status"] == "closed":
-                if order_data["close_reason"] == "expired":
-                    return True, order_data["close_profit"] - order_data["invest"]
-                elif order_data["close_reason"] == "default":
-                    return True, order_data["pnl_realized"]
+            if order_data['status'] == 'closed':
+                if order_data['close_reason'] == 'expired':
+                    return True, order_data['close_profit'] - order_data['invest']
+                elif order_data['close_reason'] == 'default':
+                    return True, order_data['pnl_realized']
             else:
                 return False, None
         else:
@@ -1229,15 +1260,15 @@ class StableHermes:
 
         check, data = self.get_order(self.api.buy_order_id)
 
-        while data["status"] == "pending_new":
+        while data['status'] == 'pending_new':
             check, data = self.get_order(self.api.buy_order_id)
             time.sleep(1)
 
         if check:
-            if data["status"] != "rejected":
+            if data['status'] != 'rejected':
                 return True, self.api.buy_order_id
             else:
-                return False, data["reject_status"]
+                return False, data['reject_status']
         else:
 
             return False, None
@@ -1249,7 +1280,7 @@ class StableHermes:
         while self.api.auto_margin_call_changed_respond is None:
             pass
 
-        if self.api.auto_margin_call_changed_respond["status"] == 2000:
+        if self.api.auto_margin_call_changed_respond['status'] == 2000:
             return True, self.api.auto_margin_call_changed_respond
         else:
             return False, self.api.auto_margin_call_changed_respond
@@ -1260,11 +1291,11 @@ class StableHermes:
                      use_trail_stop, auto_margin_call):
         check = True
 
-        if id_name == "position_id":
+        if id_name == 'position_id':
             check, order_data = self.get_order(order_id)
-            position_id = order_data["position_id"]
+            position_id = order_data['position_id']
             change_order_id = position_id
-        elif id_name == "order_id":
+        elif id_name == 'order_id':
             change_order_id = order_id
         else:
             logging.error('change_order input error ID_Name')
@@ -1282,8 +1313,8 @@ class StableHermes:
             while self.api.tpsl_changed_respond is None:
                 pass
 
-            if self.api.tpsl_changed_respond["status"] == 2000:
-                return True, self.api.tpsl_changed_respond["msg"]
+            if self.api.tpsl_changed_respond['status'] == 2000:
+                return True, self.api.tpsl_changed_respond['msg']
             else:
                 return False, self.api.tpsl_changed_respond
         else:
@@ -1303,8 +1334,8 @@ class StableHermes:
         while self.api.order_data is None:
             pass
 
-        if self.api.order_data["status"] == 2000:
-            return True, self.api.order_data["msg"]
+        if self.api.order_data['status'] == 2000:
+            return True, self.api.order_data['msg']
         else:
             return False, None
 
@@ -1315,8 +1346,8 @@ class StableHermes:
         while self.api.deferred_orders is None:
             pass
 
-        if self.api.deferred_orders["status"] == 2000:
-            return True, self.api.deferred_orders["msg"]
+        if self.api.deferred_orders['status'] == 2000:
+            return True, self.api.deferred_orders['msg']
         else:
             return False, None
 
@@ -1327,27 +1358,27 @@ class StableHermes:
         while self.api.positions is None:
             pass
 
-        if self.api.positions["status"] == 2000:
-            return True, self.api.positions["msg"]
+        if self.api.positions['status'] == 2000:
+            return True, self.api.positions['msg']
         else:
             return False, None
 
     def get_position(self, buy_order_id):
         self.api.position = None
         check, order_data = self.get_order(buy_order_id)
-        position_id = order_data["position_id"]
+        position_id = order_data['position_id']
         self.api.get_position(position_id)
 
         while self.api.position is None:
             pass
 
-        if self.api.position["status"] == 2000:
-            return True, self.api.position["msg"]
+        if self.api.position['status'] == 2000:
+            return True, self.api.position['msg']
         else:
             return False, None
 
     def get_digital_position_by_position_id(self, position_id):
-        """Heavy function. Be careful!"""
+        '''Heavy function. Be careful!'''
         self.api.position = None
         self.api.get_digital_position(position_id)
 
@@ -1359,11 +1390,11 @@ class StableHermes:
     def get_digital_position(self, order_id):
         self.api.position = None
 
-        while self.get_async_order(order_id)["position-changed"] == {}:
+        while self.get_async_order(order_id)['position-changed'] == {}:
             pass
 
         position_id = self.get_async_order(
-            order_id)["position-changed"]["msg"]["external_id"]
+            order_id)['position-changed']['msg']['external_id']
 
         self.api.get_digital_position(position_id)
 
@@ -1379,8 +1410,8 @@ class StableHermes:
         while self.api.position_history is None:
             pass
 
-        if self.api.position_history["status"] == 2000:
-            return True, self.api.position_history["msg"]
+        if self.api.position_history['status'] == 2000:
+            return True, self.api.position_history['msg']
         else:
             return False, None
 
@@ -1392,16 +1423,16 @@ class StableHermes:
         while self.api.position_history_v2 is None:
             pass
 
-        if self.api.position_history_v2["status"] == 2000:
-            return True, self.api.position_history_v2["msg"]
+        if self.api.position_history_v2['status'] == 2000:
+            return True, self.api.position_history_v2['msg']
         else:
             return False, None
 
-    def get_available_leverages(self, instrument_type, actives=""):
+    def get_available_leverages(self, instrument_type, actives=''):
         self.api.available_leverages = None
 
-        if actives == "":
-            self.api.get_available_leverages(instrument_type, "")
+        if actives == '':
+            self.api.get_available_leverages(instrument_type, '')
         else:
             self.api.get_available_leverages(
                 instrument_type, codes.ACTIVES[actives])
@@ -1409,8 +1440,8 @@ class StableHermes:
         while self.api.available_leverages is None:
             pass
 
-        if self.api.available_leverages["status"] == 2000:
-            return True, self.api.available_leverages["msg"]
+        if self.api.available_leverages['status'] == 2000:
+            return True, self.api.available_leverages['msg']
         else:
             return False, None
 
@@ -1421,7 +1452,7 @@ class StableHermes:
         while self.api.order_canceled is None:
             pass
 
-        if self.api.order_canceled["status"] == 2000:
+        if self.api.order_canceled['status'] == 2000:
             return True
         else:
             return False
@@ -1429,13 +1460,13 @@ class StableHermes:
     def close_position(self, position_id):
         check, data = self.get_order(position_id)
 
-        if data["position_id"] is not None:
+        if data['position_id'] is not None:
             self.api.close_position_data = None
-            self.api.close_position(data["position_id"])
+            self.api.close_position(data['position_id'])
 
             while self.api.close_position_data is None:
                 pass
-            if self.api.close_position_data["status"] == 2000:
+            if self.api.close_position_data['status'] == 2000:
                 return True
             else:
                 return False
@@ -1447,12 +1478,12 @@ class StableHermes:
             pass
 
         position_changed = self.get_async_order(position_id)
-        self.api.close_position(position_changed["id"])
+        self.api.close_position(position_changed['id'])
 
         while self.api.close_position_data is None:
             pass
 
-        if self.api.close_position_data["status"] == 2000:
+        if self.api.close_position_data['status'] == 2000:
             return True
         else:
             return False
@@ -1464,8 +1495,8 @@ class StableHermes:
         while self.api.overnight_fee is None:
             pass
 
-        if self.api.overnight_fee["status"] == 2000:
-            return True, self.api.overnight_fee["msg"]
+        if self.api.overnight_fee['status'] == 2000:
+            return True, self.api.overnight_fee['msg']
         else:
             return False, None
 
@@ -1518,7 +1549,7 @@ class StableHermes:
 
         while True:
             try:
-                if self.api.leaderboard_userinfo_deals_client["isSuccessful"]:
+                if self.api.leaderboard_userinfo_deals_client['isSuccessful']:
                     break
             except:
                 pass
