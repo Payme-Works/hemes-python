@@ -776,12 +776,18 @@ class StableHermes:
 
     def get_history(self, limit):
         self.api.get_options_v2_data = None
-        self.api.get_options_v2(limit, "binary,turbo")
+        self.api.get_options_v2(limit, "digital-option,binary,turbo")
 
         while self.api.get_options_v2_data is None:
             pass
 
-        return self.api.get_options_v2_data
+        binary_history = self.api.get_options_v2_data
+        _, digital_history = self.get_position_history_v2('digital-option', limit, 0, 0, 0)
+
+        return {
+            'binary': binary_history,
+            'digital': digital_history
+        }
 
     def buy_multi(self, price, actives, action, expirations):
         self.api.buy_multi_option = {}
@@ -1381,8 +1387,7 @@ class StableHermes:
     def get_position_history_v2(self, instrument_type, limit, offset, start, end):
         # instrument_type: crypto, forex, fx-option, multi-option, cfd, digital-option, turbo-option
         self.api.position_history_v2 = None
-        self.api.get_position_history_v2(
-            instrument_type, limit, offset, start, end)
+        self.api.get_position_history_v2(instrument_type, limit, offset, start, end)
 
         while self.api.position_history_v2 is None:
             pass
