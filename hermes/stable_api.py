@@ -790,8 +790,16 @@ class StableHermes:
             pass
 
         binary_history = self.api.get_options_v2_data
-        _, digital_history = self.get_position_history_v2(
+        _, digital_history_raw = self.get_position_history_v2(
             'digital-option', limit, 0, 0, 0)
+
+        digital_history = dict(digital_history_raw)
+
+        digital_history.update({
+            'positions': list(map((lambda x: dict({
+                'win': 'loose' if x['pnl'] < 0 else 'win'
+            }, **x)), digital_history_raw['positions']))
+        })
 
         return {
             'binary': binary_history,
