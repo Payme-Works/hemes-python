@@ -219,7 +219,8 @@ class StableHermes:
 
         for dirr in (['binary', 'turbo']):
             for i in init_info['result'][dirr]['actives']:
-                codes.ACTIVES[(init_info['result'][dirr]['actives'][i]['name']).split('.')[1]] = int(i)
+                codes.ACTIVES[(init_info['result'][dirr]['actives']
+                               [i]['name']).split('.')[1]] = int(i)
 
     def get_all_init(self):
         while True:
@@ -344,13 +345,13 @@ class StableHermes:
             name = init_info['result']['turbo']['actives'][actives]['name']
             name = name[name.index('.') + 1:len(name)]
             all_profit[name]['turbo'] = (100.0 - init_info['result']['turbo']['actives'][actives]['option']['profit'][
-                                                'commission']) / 100.0
+                'commission']) / 100.0
 
         for actives in init_info['result']['binary']['actives']:
             name = init_info['result']['binary']['actives'][actives]['name']
             name = name[name.index('.') + 1:len(name)]
             all_profit[name]['binary'] = (100.0 - init_info['result']['binary']['actives'][actives]['option']['profit'][
-                                                 'commission']) / 100.0
+                'commission']) / 100.0
 
         return all_profit
 
@@ -461,7 +462,8 @@ class StableHermes:
         self.api.candles.candles_data = None
         while True:
             try:
-                self.api.get_candles(codes.ACTIVES[actives], interval, count, end_time)
+                self.api.get_candles(
+                    codes.ACTIVES[actives], interval, count, end_time)
 
                 while self.check_connect and self.api.candles.candles_data is None:
                     pass
@@ -502,7 +504,8 @@ class StableHermes:
             try:
                 return self.api.real_time_candles[active]
             except:
-                logging.error("**error** get_realtime_candles() size='all' can not get candle")
+                logging.error(
+                    "**error** get_realtime_candles() size='all' can not get candle")
 
                 return False
         elif size in self.size:
@@ -513,16 +516,19 @@ class StableHermes:
                     '**error** get_realtime_candles() size=' + str(size) + ' can not get candle')
                 return False
         else:
-            logging.error("**error** get_realtime_candles() please input right 'size'")
+            logging.error(
+                "**error** get_realtime_candles() please input right 'size'")
 
     def get_all_realtime_candles(self):
         return self.api.real_time_candles
 
     def full_realtime_get_candle(self, active, size, max_dict):
-        candles = self.get_candles(active, size, max_dict, self.api.time_sync.server_timestamp)
+        candles = self.get_candles(
+            active, size, max_dict, self.api.time_sync.server_timestamp)
 
         for can in candles:
-            self.api.real_time_candles[str(active)][int(size)][can['from']] = can
+            self.api.real_time_candles[str(
+                active)][int(size)][can['from']] = can
 
     def start_candles_one_stream(self, active, size):
         if not (str(active + ',' + str(size)) in self.subscribe_candle):
@@ -751,12 +757,14 @@ class StableHermes:
             try:
                 self.api.get_bet_info(id_number)
             except:
-                logging.error('**error** def get_bet_info  self.api.get_bet_info reconnect')
+                logging.error(
+                    '**error** def get_bet_info  self.api.get_bet_info reconnect')
                 self.connect()
 
             while self.api.game_betinfo.isSuccessful is None:
                 if time.time() - start > 10:
-                    logging.error('**error** get_bet_info time out need reconnect')
+                    logging.error(
+                        '**error** get_bet_info time out need reconnect')
                     self.connect()
                     self.api.get_bet_info(id_number)
                     time.sleep(self.suspend * 10)
@@ -782,7 +790,8 @@ class StableHermes:
             pass
 
         binary_history = self.api.get_options_v2_data
-        _, digital_history = self.get_position_history_v2('digital-option', limit, 0, 0, 0)
+        _, digital_history = self.get_position_history_v2(
+            'digital-option', limit, 0, 0, 0)
 
         return {
             'binary': binary_history,
@@ -864,6 +873,37 @@ class StableHermes:
         return self.api.result, self.api.buy_multi_option[req_id]['id']
 
     def buy(self, data):
+        """
+        Buy a order in some active.
+
+        :param data: {
+            type: 'binary' | 'digital';
+            active: string;
+            price_amount: string;
+            action: 'call' | 'put';
+            expiration: int;
+        }
+        """
+        typ = data['type']
+        active = codes.ACTIVES[data['active']]
+        price_amount = float(data['price_amount'])
+        action = str(data['action'])
+        expiration = int(data['expiration'])
+
+        if typ == 'digital':
+            if type(data) is list:
+                results = []
+
+                for item in data:
+                    buy_result = self.buy_digital_spot(
+                        data['active'], price_amount, action, expiration)
+                    results.append(buy_result)
+
+                return results
+
+            return self.buy_digital_spot(
+                data['active'], price_amount, action, expiration)
+
         if type(data) is list:
             results = []
 
@@ -883,8 +923,7 @@ class StableHermes:
         except:
             pass
 
-        self.api.buy_v3(
-            float(data['price_amount']), codes.ACTIVES[data['active']], str(data['action']), int(data['expiration']), req_id)
+        self.api.buy_v3(price_amount, active, action, expiration, req_id)
 
         start_t = time.time()
         id = None
@@ -935,7 +974,8 @@ class StableHermes:
 
         while self.api.underlying_list_data is None:
             if time.time() - start_t >= 30:
-                logging.error('**warning** get_digital_underlying_list_data late 30 sec')
+                logging.error(
+                    '**warning** get_digital_underlying_list_data late 30 sec')
                 return None
 
         return self.api.underlying_list_data
@@ -968,7 +1008,8 @@ class StableHermes:
 
     def unsubscribe_strike_list(self, active, expiration_period):
         del self.api.instrument_quites_generated_data[active]
-        self.api.unsubscribe_instrument_quites_generated(active, expiration_period)
+        self.api.unsubscribe_instrument_quites_generated(
+            active, expiration_period)
 
     def get_instrument_quites_generated_data(self, active, duration):
         while self.api.instrument_quotes_generated_raw_data[active][duration * 60] == {}:
@@ -1014,7 +1055,6 @@ class StableHermes:
 
         return ans
 
-
     def get_binary_active_profit(self, active, duration):
         instrument = 'turbo'
 
@@ -1028,12 +1068,11 @@ class StableHermes:
             name = active_data['name'].replace('/', '')
 
             if name == f'front.{active}':
-                commission =  active_data['option']['profit']['commission']
+                commission = active_data['option']['profit']['commission']
 
                 return 100 - commission
 
         return -1
-
 
     def get_digital_active_profit(self, active, duration):
         self.subscribe_strike_list(active, duration)
@@ -1068,7 +1107,8 @@ class StableHermes:
         if duration == 1:
             exp, _ = get_expiration_time(timestamp, duration)
         else:
-            now_date = datetime.fromtimestamp(timestamp) + timedelta(minutes=1, seconds=30)
+            now_date = datetime.fromtimestamp(
+                timestamp) + timedelta(minutes=1, seconds=30)
 
             while True:
                 if now_date.minute % duration == 0 and time.mktime(now_date.timetuple()) - timestamp > 30:
@@ -1077,8 +1117,10 @@ class StableHermes:
 
             exp = time.mktime(now_date.timetuple())
 
-        date_formatted = str(datetime.utcfromtimestamp(exp).strftime('%Y%m%d%H%M'))
-        instrument_id = 'do' + active + date_formatted + 'PT' + str(duration) + 'M' + action + 'SPT'
+        date_formatted = str(datetime.utcfromtimestamp(
+            exp).strftime('%Y%m%d%H%M'))
+        instrument_id = 'do' + active + date_formatted + \
+            'PT' + str(duration) + 'M' + action + 'SPT'
 
         request_id = self.api.place_digital_option(instrument_id, amount)
 
@@ -1116,7 +1158,8 @@ class StableHermes:
         amount = max(position['raw_event']['buy_amount'],
                      position['raw_event']['sell_amount'])
         start_duration = position['instrument_id'].find('PT') + 2
-        end_duration = start_duration + position['instrument_id'][start_duration:].find('M')
+        end_duration = start_duration + \
+            position['instrument_id'][start_duration:].find('M')
 
         duration = int(position['instrument_id'][start_duration:end_duration])
         z2 = False
@@ -1418,7 +1461,8 @@ class StableHermes:
     def get_position_history_v2(self, instrument_type, limit, offset, start, end):
         # instrument_type: crypto, forex, fx-option, multi-option, cfd, digital-option, turbo-option
         self.api.position_history_v2 = None
-        self.api.get_position_history_v2(instrument_type, limit, offset, start, end)
+        self.api.get_position_history_v2(
+            instrument_type, limit, offset, start, end)
 
         while self.api.position_history_v2 is None:
             pass
@@ -1533,7 +1577,8 @@ class StableHermes:
         return self.api.live_deal_data[name][active][_type].pop()
 
     def clear_live_deal(self, name, active, _type, buffersize):
-        self.api.live_deal_data[name][active][_type] = deque(list(), buffersize)
+        self.api.live_deal_data[name][active][_type] = deque(
+            list(), buffersize)
 
     def get_user_profile_client(self, user_id):
         self.api.user_profile_client = None
