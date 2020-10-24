@@ -895,7 +895,7 @@ class StableHermes:
         typ = data['type']
         active = codes.ACTIVES[data['active']]
         price_amount = float(data['price_amount'])
-        action = str(data['action'])
+        action = str(data['action']).lower()
         expiration = int(data['expiration'])
 
         if typ == 'digital':
