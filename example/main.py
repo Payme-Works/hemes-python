@@ -30,7 +30,7 @@ print(order_id)
 
 active = 'EURUSD'
 
-order = hermes.wait_for_result(order_id)
+order = hermes.wait_for_result(order_id, 120)
 print(order)
 
 trend = hermes.get_trend(active, '5M')
