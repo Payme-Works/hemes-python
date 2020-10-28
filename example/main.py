@@ -3,7 +3,6 @@ load_dotenv()
 
 import os
 import json
-import time
 
 from hermes.stable_api import StableHermes as Hermes
 
@@ -13,17 +12,29 @@ hermes.connect()
 balances = hermes.get_balances()
 real_balance = next((item for item in balances if item['type'] == 1), None)
 
-print(f'Real balance: {real_balance["amount"]}')
+print(f'Real balance: {real_balance["amount"]}\n')
 
-hermes.change_balance('PRACTICE')
+hermes.change_balance('practice')
 
-_, order_id = hermes.buy({
-    'price_amount': 2,
-    'active': 'EURUSD',
-    'action': 'put',
-    'expiration': 1
-})
-print(order_id)
+# _, order_id = hermes.buy({
+#     'price_amount': 2,
+#     'active': 'EURUSD',
+#     'action': 'put',
+#     'expiration': 1
+# })
+# print(order_id)
 
-profit = hermes.get_all_open_actives()
-print(json.dumps(profit))
+# all_open_actives = hermes.get_all_open_actives()
+# print(json.dumps(all_open_actives))
+
+active = 'EURUSD'
+
+candles = hermes.get_candles(active, '5M')
+print(json.dumps(candles[len(candles) - 5]))
+print(json.dumps(candles[len(candles) - 4]))
+print(json.dumps(candles[len(candles) - 3]))
+print(json.dumps(candles[len(candles) - 2]))
+print(json.dumps(candles[len(candles) - 1]))
+
+trend = hermes.get_trend(active, '5M')
+print(f'\n[{active}] Trend: {trend}')
