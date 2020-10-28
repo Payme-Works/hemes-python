@@ -9,8 +9,8 @@ class LeaderBoard(Base):
             "name": "request-leaderboard-deals-client",
             "version": "1.0",
             "body": {
-                    "country_id": country_id,
-                    "user_country_id": user_country_id,
+                "country_id": country_id,
+                "user_country_id": user_country_id,
                 "from_position": from_position,
                 "to_position": to_position,
                 "near_traders_country_count": near_traders_country_count,

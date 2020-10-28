@@ -1,18 +1,20 @@
-from threading import active_count
 import time
 import json
 import logging
 import operator
+
 from collections import defaultdict
 from collections import deque
 from datetime import datetime, timedelta
 from random import randint
 
 from hermes.api import Hermes
-import hermes.constants as codes
-import hermes.country_id as countries
-import hermes.global_value as global_value
 from hermes.expiration import get_expiration_time, get_remaning_time
+
+import hermes.constants as constants
+import hermes.candle_intervals as candle_intervals
+import hermes.countries as countries
+import hermes.global_value as global_value
 
 
 def nested_dict(n, type):
@@ -141,7 +143,7 @@ class StableHermes:
 
     @staticmethod
     def get_all_actives_opcode():
-        return codes.ACTIVES
+        return constants.ACTIVES
 
     def update_actives_opcode(self):
         self.get_all_binary_actives_opcode()
@@ -149,10 +151,10 @@ class StableHermes:
 
         dicc = {}
 
-        for lis in sorted(codes.ACTIVES.items(), key=operator.itemgetter(1)):
+        for lis in sorted(constants.ACTIVES.items(), key=operator.itemgetter(1)):
             dicc[lis[0]] = lis[1]
 
-        codes.ACTIVES = dicc
+        constants.ACTIVES = dicc
 
     def get_name_by_active_id(self, active_id):
         info = self.get_financial_information(active_id)
@@ -164,7 +166,7 @@ class StableHermes:
 
     def get_financial_information(self, active):
         self.api.financial_information = None
-        self.api.get_financial_information(codes.ACTIVES[active])
+        self.api.get_financial_information(constants.ACTIVES[active])
 
         while self.api.financial_information is None:
             pass
@@ -207,7 +209,7 @@ class StableHermes:
         instruments = self.get_instruments(type)
 
         for ins in instruments['instruments']:
-            codes.ACTIVES[ins['id']] = ins['active_id']
+            constants.ACTIVES[ins['id']] = ins['active_id']
 
     def instruments_input_all_in_actives(self):
         self.instruments_input_to_actives('crypto')
@@ -219,7 +221,7 @@ class StableHermes:
 
         for dirr in (['binary', 'turbo']):
             for i in init_info['result'][dirr]['actives']:
-                codes.ACTIVES[(init_info['result'][dirr]['actives']
+                constants.ACTIVES[(init_info['result'][dirr]['actives']
                                [i]['name']).split('.')[1]] = int(i)
 
     def get_all_init(self):
@@ -439,6 +441,7 @@ class StableHermes:
         real_id = None
         practice_id = None
         tournament_id = None
+        mode = str(balance_mode).upper()
 
         for balance in self.get_profile_async()['balances']:
             if balance['type'] == 1:
@@ -448,22 +451,28 @@ class StableHermes:
             if balance['type'] == 2:
                 tournament_id = balance['id']
 
-        if balance_mode == 'REAL':
+        if mode == 'REAL':
             set_id(real_id)
-        elif balance_mode == 'PRACTICE':
+        elif mode == 'PRACTICE':
             set_id(practice_id)
-        elif balance_mode == 'TOURNAMENT':
+        elif mode == 'TOURNAMENT':
             set_id(tournament_id)
         else:
             logging.error("ERROR doesn't have this mode")
             exit(1)
 
-    def get_candles(self, actives, interval, count, end_time):
+    def get_candles(self, active, interval, amount=100, end_time=time.time()):
         self.api.candles.candles_data = None
+
+        interval_value = interval
+
+        if type(interval) is str:
+            interval_label = str(interval).upper()
+            interval_value = candle_intervals.INTERVALS[interval_label]
+
         while True:
             try:
-                self.api.get_candles(
-                    codes.ACTIVES[actives], interval, count, end_time)
+                self.api.get_candles(constants.ACTIVES[active], interval_value, amount, end_time)
 
                 while self.check_connect and self.api.candles.candles_data is None:
                     pass
@@ -471,10 +480,42 @@ class StableHermes:
                 if self.api.candles.candles_data is not None:
                     break
             except:
-                logging.error('**error** get_candles need reconnect')
+                logging.error("**error** 'get_candles' need reconnect")
                 self.connect()
 
-        return self.api.candles.candles_data
+        data = []
+
+        for candle_data in self.api.candles.candles_data:
+            candle_data.update({
+                'direction': 'equal' if candle_data['close'] == candle_data['open'] else
+                             'up' if candle_data['close'] > candle_data['open'] else 'down'
+            })
+
+            data.append(candle_data)
+
+        return data
+
+    def get_trend(self, active, interval, amount=100):
+        candles = self.get_candles(active, interval, amount)
+
+        count = {
+            'up': 0,
+            'down': 0
+        }
+
+        for candle in candles:
+            direction = candle['direction']
+
+            if direction == 'up' or direction == 'down':
+                count[direction] = count[direction] + 1
+
+        trend = 'up'
+
+        if count['up'] < count['down']:
+            trend = 'down'
+
+        return trend
+
 
     def start_candles_stream(self, active, size, max_dict):
         if size == 'all':
@@ -550,7 +591,7 @@ class StableHermes:
                 pass
 
             try:
-                self.api.subscribe(codes.ACTIVES[active], size)
+                self.api.subscribe(constants.ACTIVES[active], size)
             except:
                 logging.error('**error** start_candles_stream reconnect')
                 self.connect()
@@ -567,7 +608,7 @@ class StableHermes:
             except:
                 pass
             self.api.candle_generated_check[str(active)][int(size)] = {}
-            self.api.unsubscribe(codes.ACTIVES[active], size)
+            self.api.unsubscribe(constants.ACTIVES[active], size)
             time.sleep(self.suspend * 10)
 
     def start_candles_all_size_stream(self, active):
@@ -591,7 +632,7 @@ class StableHermes:
                 pass
 
             try:
-                self.api.subscribe_all_size(codes.ACTIVES[active])
+                self.api.subscribe_all_size(constants.ACTIVES[active])
             except:
                 logging.error(
                     '**error** start_candles_all_size_stream reconnect')
@@ -611,7 +652,7 @@ class StableHermes:
                 pass
 
             self.api.candle_generated_all_size_check[str(ACTIVE)] = {}
-            self.api.unsubscribe_all_size(codes.ACTIVES[ACTIVE])
+            self.api.unsubscribe_all_size(constants.ACTIVES[ACTIVE])
 
             time.sleep(self.suspend * 10)
 
@@ -642,9 +683,9 @@ class StableHermes:
 
         while True:
             self.api.subscribe_traders_mood(
-                codes.ACTIVES[actives], instrument)
+                constants.ACTIVES[actives], instrument)
             try:
-                self.api.traders_mood[codes.ACTIVES[actives]]
+                self.api.traders_mood[constants.ACTIVES[actives]]
                 break
             except:
                 time.sleep(5)
@@ -652,17 +693,17 @@ class StableHermes:
     def stop_mood_stream(self, actives, instrument='turbo-option'):
         if actives in self.subscribe_mood:
             del self.subscribe_mood[actives]
-        self.api.unsubscribe_traders_mood(codes.ACTIVES[actives], instrument)
+        self.api.unsubscribe_traders_mood(constants.ACTIVES[actives], instrument)
 
     def get_traders_mood(self, actives):
-        return self.api.traders_mood[codes.ACTIVES[actives]]
+        return self.api.traders_mood[constants.ACTIVES[actives]]
 
     def get_all_traders_mood(self):
         return self.api.traders_mood
 
     def get_technical_indicators(self, actives):
         request_id = self.api.get_technical_indicators(
-            codes.ACTIVES[actives])
+            constants.ACTIVES[actives])
         while self.api.technical_indicators.get(request_id) is None:
             pass
         return self.api.technical_indicators[request_id]
@@ -814,7 +855,7 @@ class StableHermes:
 
             for idx in range(buy_len):
                 self.api.buy_v3(
-                    price[idx], codes.ACTIVES[actives[idx]], action[idx], expirations[idx], idx)
+                    price[idx], constants.ACTIVES[actives[idx]], action[idx], expirations[idx], idx)
 
             while len(self.api.buy_multi_option) < buy_len:
                 pass
@@ -853,7 +894,7 @@ class StableHermes:
             pass
 
         self.api.buy_by_raw_expired_v3(
-            price, codes.ACTIVES[active], direction, option, expired, request_id=req_id)
+            price, constants.ACTIVES[active], direction, option, expired, request_id=req_id)
 
         start_t = time.time()
         id = None
@@ -893,7 +934,7 @@ class StableHermes:
         }
         """
         typ = data['type']
-        active = codes.ACTIVES[data['active']]
+        active = constants.ACTIVES[data['active']]
         price_amount = float(data['price_amount'])
         action = str(data['action']).lower()
         expiration = int(data['expiration'])
@@ -1487,7 +1528,7 @@ class StableHermes:
             self.api.get_available_leverages(instrument_type, '')
         else:
             self.api.get_available_leverages(
-                instrument_type, codes.ACTIVES[actives])
+                instrument_type, constants.ACTIVES[actives])
 
         while self.api.available_leverages is None:
             pass
@@ -1542,7 +1583,7 @@ class StableHermes:
 
     def get_overnight_fee(self, instrument_type, active):
         self.api.overnight_fee = None
-        self.api.get_overnight_fee(instrument_type, codes.ACTIVES[active])
+        self.api.get_overnight_fee(instrument_type, constants.ACTIVES[active])
 
         while self.api.overnight_fee is None:
             pass
@@ -1560,16 +1601,16 @@ class StableHermes:
 
     @staticmethod
     def opcode_to_name(opcode):
-        return list(codes.ACTIVES.keys())[list(codes.ACTIVES.values()).index(opcode)]
+        return list(constants.ACTIVES.keys())[list(constants.ACTIVES.values()).index(opcode)]
 
     def subscribe_live_deal(self, name, active, _type, buffersize):
         # name: live-deal-binary-option-placed, live-deal-digital-option
-        active_id = codes.ACTIVES[active]
+        active_id = constants.ACTIVES[active]
 
         self.api.subscribe_live_deal(name, active_id, _type)
 
     def unsubscribe_live_deal(self, name, active, _type):
-        active_id = codes.ACTIVES[active]
+        active_id = constants.ACTIVES[active]
         self.api.unsubscribe_live_deal(name, active_id, _type)
 
     def set_digital_live_deal_cb(self, cb):
@@ -1607,8 +1648,7 @@ class StableHermes:
             except:
                 pass
 
-            self.api.request_leaderboard_userinfo_deals_client(
-                user_id, country_id)
+            self.api.request_leaderboard_userinfo_deals_client(user_id, country_id)
             time.sleep(0.2)
 
         return self.api.leaderboard_userinfo_deals_client
