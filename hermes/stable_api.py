@@ -222,7 +222,7 @@ class StableHermes:
         for dirr in (['binary', 'turbo']):
             for i in init_info['result'][dirr]['actives']:
                 constants.ACTIVES[(init_info['result'][dirr]['actives']
-                               [i]['name']).split('.')[1]] = int(i)
+                                   [i]['name']).split('.')[1]] = int(i)
 
     def get_all_init(self):
         while True:
@@ -472,7 +472,8 @@ class StableHermes:
 
         while True:
             try:
-                self.api.get_candles(constants.ACTIVES[active], interval_value, amount, end_time)
+                self.api.get_candles(
+                    constants.ACTIVES[active], interval_value, amount, end_time)
 
                 while self.check_connect and self.api.candles.candles_data is None:
                     pass
@@ -515,7 +516,6 @@ class StableHermes:
             trend = 'down'
 
         return trend
-
 
     def start_candles_stream(self, active, size, max_dict):
         if size == 'all':
@@ -693,7 +693,8 @@ class StableHermes:
     def stop_mood_stream(self, actives, instrument='turbo-option'):
         if actives in self.subscribe_mood:
             del self.subscribe_mood[actives]
-        self.api.unsubscribe_traders_mood(constants.ACTIVES[actives], instrument)
+        self.api.unsubscribe_traders_mood(
+            constants.ACTIVES[actives], instrument)
 
     def get_traders_mood(self, actives):
         return self.api.traders_mood[constants.ACTIVES[actives]]
@@ -719,14 +720,25 @@ class StableHermes:
         return your_order
 
     def wait_for_order_close(self, order_id):
-        while True:
+        attempts = 0
+
+        while True and attempts < 100:
             try:
                 return self.api.closed_options[order_id]
             except:
+                attempts += 1
+                time.sleep(0.1)
                 pass
 
+        return None
+
     def wait_for_result(self, order_id):
-        return self.wait_for_order_close(order_id)['result']
+        order = self.wait_for_order_close(order_id)
+
+        if order is None:
+            return None
+
+        return order['result']
 
     def check_win_old(self, id_number):
         while True:
@@ -1648,7 +1660,8 @@ class StableHermes:
             except:
                 pass
 
-            self.api.request_leaderboard_userinfo_deals_client(user_id, country_id)
+            self.api.request_leaderboard_userinfo_deals_client(
+                user_id, country_id)
             time.sleep(0.2)
 
         return self.api.leaderboard_userinfo_deals_client
