@@ -722,18 +722,18 @@ class StableHermes:
     def wait_for_order_close(self, order_id, timeout=10):
         attempts = 0
 
-        while True and attempts < (timeout * 10):
+        while True and attempts < (timeout * 20):
             try:
                 return self.api.closed_options[int(order_id)]
             except:
                 attempts += 1
-                time.sleep(timeout / 100)
+                time.sleep(timeout / 200)
                 pass
 
         return None
 
-    def wait_for_result(self, order_id):
-        order = self.wait_for_order_close(order_id)
+    def wait_for_result(self, order_id, timeout=10):
+        order = self.wait_for_order_close(order_id, timeout)
 
         if order is None:
             return None
