@@ -165,7 +165,8 @@ class WebsocketClient(object):
                 message['request_id'])] = message['msg']
         elif message['name'] == 'listInfoData':
             for get_m in message['msg']:
-                self.api.list_info_data.set(get_m['win'], get_m['game_state'], get_m['id'])
+                self.api.list_info_data.set(
+                    get_m['win'], get_m['game_state'], get_m['id'])
         elif message['name'] == 'socket-option-opened':
             id = message['msg']['id']
             self.api.socket_option_opened[id] = message
@@ -197,7 +198,8 @@ class WebsocketClient(object):
 
                     self.api.closed_options[order_id]['result'] = result
             elif message['microserviceName'] == 'portfolio' and message['msg']['source'] == 'binary-options':
-                self.api.order_async[int(message['msg']['external_id'])][message['name']] = message
+                self.api.order_async[int(
+                    message['msg']['external_id'])][message['name']] = message
         elif message['name'] == 'option-opened':
             self.api.order_async[int(
                 message['msg']['option_id'])][message['name']] = message
@@ -208,7 +210,8 @@ class WebsocketClient(object):
             self.api.closed_options[option_id] = message['msg']
 
             if message['microserviceName'] == 'binary-options':
-                self.api.order_binary[message['msg']['option_id']] = message['msg']
+                self.api.order_binary[message['msg']
+                                      ['option_id']] = message['msg']
         elif message['name'] == 'top-assets-updated':
             self.api.top_assets_updated_data[str(
                 message['msg']['instrument_type'])] = message['msg']['data']
@@ -221,7 +224,8 @@ class WebsocketClient(object):
             except:
                 pass
         elif message['name'] == 'traders-mood-changed':
-            self.api.traders_mood[message['msg']['asset_id']] = message['msg']['value']
+            self.api.traders_mood[message['msg']
+                                  ['asset_id']] = message['msg']['value']
         elif message['name'] == 'order-placed-temp':
             self.api.buy_order_id = message['msg']['id']
         elif message['name'] == 'order':
@@ -235,7 +239,8 @@ class WebsocketClient(object):
         elif message['name'] == 'technical-indicators':
             if message['msg'].get('indicators') != None:
                 self.api_dict_clean(self.api.technical_indicators)
-                self.api.technical_indicators[message['request_id']] = message['msg']['indicators']
+                self.api.technical_indicators[message['request_id']
+                                              ] = message['msg']['indicators']
             else:
                 self.api.technical_indicators[message['request_id']] = {
                     'code': 'no_technical_indicator_available',
@@ -265,7 +270,8 @@ class WebsocketClient(object):
         elif message['name'] == 'digital-option-placed':
             if message['msg'].get('id') is not None:
                 self.api_dict_clean(self.api.digital_option_placed_id)
-                self.api.digital_option_placed_id[message['request_id']] = message['msg']['id']
+                self.api.digital_option_placed_id[message['request_id']
+                                                  ] = message['msg']['id']
             else:
                 self.api.digital_option_placed_id[message['request_id']] = {
                     'code': 'error_place_digital_order',
