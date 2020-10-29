@@ -1,5 +1,4 @@
 from hermes.ws.channels.base import Base
-import hermes.global_value as global_value
 
 
 class GetPositions(Base):
@@ -17,7 +16,7 @@ class GetPositions(Base):
             "name": name,
             "body": {
                 "instrument_type": instrument_type,
-                "user_balance_id": int(global_value.balance_id)
+                "user_balance_id": int(self.api.balance_id)
             }
         }
 
@@ -46,7 +45,7 @@ class GetPositionHistory(Base):
             "name": "get-position-history",
             "body": {
                 "instrument_type": instrument_type,
-                "user_balance_id": int(global_value.balance_id)
+                "user_balance_id": int(self.api.balance_id)
             }
         }
 
@@ -65,7 +64,7 @@ class GetPositionHistoryV2(Base):
                 "offset": offset,
                 "start": start,
                 "end": end,
-                "user_balance_id": int(global_value.balance_id)
+                "user_balance_id": int(self.api.balance_id)
             }
         }
 

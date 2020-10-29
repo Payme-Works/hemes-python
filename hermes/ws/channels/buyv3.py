@@ -1,8 +1,4 @@
-import datetime
-import time
 from hermes.ws.channels.base import Base
-import logging
-import hermes.global_value as global_value
 from hermes.expiration import get_expiration_time
 
 
@@ -26,7 +22,7 @@ class BuyV3(Base):
                 "expired": int(exp),
                 "direction": direction.lower(),
                 "option_type_id": option,
-                "user_balance_id": int(global_value.balance_id)
+                "user_balance_id": int(self.api.balance_id)
             },
             "name": "binary-options.open-option",
             "version": "1.0"
@@ -50,7 +46,7 @@ class BuyByRawExpiredV3(Base):
                      "expired": int(expired),
                      "direction": direction.lower(),
                      "option_type_id": option_id,
-                     "user_balance_id": int(global_value.balance_id)
+                     "user_balance_id": int(self.api.balance_id)
                      },
             "name": "binary-options.open-option",
             "version": "1.0"

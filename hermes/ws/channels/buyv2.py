@@ -1,5 +1,4 @@
 """Module for IQ Option buyV2 websocket channel."""
-import hermes.global_value as global_value
 from hermes.ws.channels.base import Base
 from hermes.expiration import get_expiration_time
 
@@ -16,7 +15,6 @@ class BuyV2(Base):
         :param active: The buying active.
         :param direction: The buying direction.
         """
-
         exp, idx = get_expiration_time(
             int(self.api.time_sync.server_timestamp), duration)
 
@@ -31,7 +29,7 @@ class BuyV2(Base):
             "exp": int(exp),
             "type": option,
             "direction": direction.lower(),
-            "user_balance_id": int(global_value.balance_id),
+            "user_balance_id": int(self.api.balance_id),
             "time": self.api.time_sync.server_timestamp
         }
 

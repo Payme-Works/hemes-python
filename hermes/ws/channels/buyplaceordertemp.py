@@ -1,19 +1,24 @@
 from hermes.ws.channels.base import Base
-import hermes.global_value as global_value
 
 
 class BuyPlaceOrderTemp(Base):
     name = "sendMessage"
 
     def __call__(self,
-                 instrument_type, instrument_id,
-                 side, amount, leverage,
-                 type, limit_price, stop_price,
-
-                 stop_lose_kind, stop_lose_value,
-                 take_profit_kind, take_profit_value,
-
-                 use_trail_stop, auto_margin_call,
+                 instrument_type,
+                 instrument_id,
+                 side,
+                 amount,
+                 leverage,
+                 type,
+                 limit_price,
+                 stop_price,
+                 stop_lose_kind,
+                 stop_lose_value,
+                 take_profit_kind,
+                 take_profit_value,
+                 use_trail_stop,
+                 auto_margin_call,
                  use_token_for_commission):
         data = {
             "name": "place-order-temp",
@@ -44,7 +49,7 @@ class BuyPlaceOrderTemp(Base):
 
 
                 "use_token_for_commission": bool(use_token_for_commission),
-                "user_balance_id": int(global_value.balance_id),
+                "user_balance_id": int(self.api.balance_id),
                 "client_platform_id": "9",  # important can not delete,9 mean your platform is linux
             }
         }

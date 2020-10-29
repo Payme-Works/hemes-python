@@ -3,6 +3,8 @@ import threading
 import requests
 import ssl
 import atexit
+import logging
+
 from collections import deque
 
 from hermes.http.login import Login
@@ -57,7 +59,6 @@ from hermes.ws.objects.profile import Profile
 from hermes.ws.objects.candles import Candles
 from hermes.ws.objects.listinfodata import ListInfoData
 from hermes.ws.objects.betinfo import GameBetInfoData
-import hermes.global_value as global_value
 from collections import defaultdict
 
 
@@ -137,6 +138,14 @@ class Hermes(object):
     leaderboard_userinfo_deals_client = None
     users_availability = None
 
+    check_websocket_if_connect = None
+    ssl_mutual_exclusion = False
+    ssl_mutual_exclusion_write = False
+    ssid = None
+    check_websocket_if_error = False
+    websocket_error_reason = None
+    balance_id = None
+
     def __init__(self, host, username, password, proxies=None):
         """
         :param str host: The hostname or ip address of a IQ Option server.
@@ -156,7 +165,6 @@ class Hermes(object):
         self.token_sms = None
         self.proxies = proxies
         self.buy_successful = None
-        self.__active_account_type = None
         self.websocket_thread = None
 
     def prepare_http_url(self, resource):
@@ -216,7 +224,9 @@ class Hermes(object):
         logger = logging.getLogger(__name__)
 
         logger.debug(
-            method+": "+url+" headers: "+str(self.session.headers) + " cookies: "+str(self.session.cookies.get_dict())
+            method+": "+url+" headers: " +
+            str(self.session.headers) + " cookies: " +
+            str(self.session.cookies.get_dict())
         )
 
         response = self.session.request(
@@ -248,16 +258,16 @@ class Hermes(object):
 
         data = json.dumps(dict(name=name, msg=msg, request_id=request_id))
 
-        while (global_value.ssl_Mutual_exclusion or global_value.ssl_mutual_exclusion_write) and no_force_send:
+        while (self.ssl_mutual_exclusion or self.ssl_mutual_exclusion_write) and no_force_send:
             pass
 
-        global_value.ssl_mutual_exclusion_write = True
+        self.ssl_mutual_exclusion_write = True
 
         self.websocket.send(data)
 
         logger.debug(data)
 
-        global_value.ssl_mutual_exclusion_write = False
+        self.ssl_mutual_exclusion_write = False
 
     @property
     def logout(self):
@@ -333,9 +343,9 @@ class Hermes(object):
 
     def reset_training_balance(self):
         self.send_websocket_request(name="sendMessage", msg={
-                "name": "reset-training-balance",
-                "version": "2.0"
-            }
+            "name": "reset-training-balance",
+            "version": "2.0"
+        }
         )
 
     @property
@@ -389,14 +399,6 @@ class Hermes(object):
     @property
     def get_financial_information(self):
         return GetFinancialInformation(self)
-
-    @property
-    def ssid(self):
-        """Property for get IQ Option websocket ssid channel.
-
-        :returns: The instance of :class:`SSID <hermes.ws.channels.ssid.SSID>`.
-        """
-        return SSID(self)
 
     @property
     def subscribe_live_deal(self):
@@ -477,7 +479,8 @@ class Hermes(object):
                 }
             }
 
-        self.send_websocket_request(name=main_name, msg=msg, request_id=request_id)
+        self.send_websocket_request(
+            name=main_name, msg=msg, request_id=request_id)
 
     def set_user_settings(self, balance_id, request_id=""):
         msg = {
@@ -492,7 +495,8 @@ class Hermes(object):
             }
         }
 
-        self.send_websocket_request(name="sendMessage", msg=msg, request_id=str(request_id))
+        self.send_websocket_request(
+            name="sendMessage", msg=msg, request_id=str(request_id))
 
     def subscribe_position_changed(self, name, instrument_type, request_id):
         # name: position-changed, trading-fx-option.position-changed, digital-options
@@ -503,17 +507,19 @@ class Hermes(object):
             "params": {
                 "routingFilters": {
                     "instrument_type": str(instrument_type)}
-                }
             }
+        }
 
-        self.send_websocket_request(name="subscribeMessage", msg=msg, request_id=str(request_id))
+        self.send_websocket_request(
+            name="subscribeMessage", msg=msg, request_id=str(request_id))
 
     def set_options(self, request_id, send_results):
         msg = {
             "sendResults": send_results
         }
 
-        self.send_websocket_request(name="setOptions", msg=msg, request_id=str(request_id))
+        self.send_websocket_request(
+            name="setOptions", msg=msg, request_id=str(request_id))
 
     @property
     def subscribe_top_assets_updated(self):
@@ -701,28 +707,28 @@ class Hermes(object):
         requests.utils.add_dict_to_cookiejar(self.session.cookies, cookies)
 
     def start_websocket(self):
-        global_value.check_websocket_if_connect = None
-        global_value.check_websocket_if_error = False
-        global_value.websocket_error_reason = None
+        self.check_websocket_if_connect = None
+        self.check_websocket_if_error = False
+        self.websocket_error_reason = None
 
         self.websocket_client = WebsocketClient(self)
 
         self.websocket_thread = threading.Thread(target=self.websocket.run_forever, kwargs={
-                                                    "sslopt": {
-                                                        "check_hostname": False,
-                                                        "cert_reqs": ssl.CERT_NONE,
-                                                        "ca_certs": "cacert.pem"
-                                                    }})
+            "sslopt": {
+                "check_hostname": False,
+                "cert_reqs": ssl.CERT_NONE,
+                "ca_certs": "cacert.pem"
+            }})
         self.websocket_thread.daemon = True
         self.websocket_thread.start()
 
         while True:
             try:
-                if global_value.check_websocket_if_error:
-                    return False, global_value.websocket_error_reason
-                if global_value.check_websocket_if_connect == 0:
+                if self.check_websocket_if_error:
+                    return False, self.websocket_error_reason
+                if self.check_websocket_if_connect == 0:
                     return False, "Websocket connection closed."
-                elif global_value.check_websocket_if_connect == 1:
+                elif self.check_websocket_if_connect == 1:
                     return True, None
             except:
                 pass
@@ -755,10 +761,12 @@ class Hermes(object):
 
     def send_ssid(self):
         self.profile.msg = None
-        self.ssid(global_value.SSID)
+
+        SSID(self)(self.ssid)
 
         while self.profile.msg is None:
             pass
+
         if self.profile.msg == False:
             return False
         else:
@@ -766,8 +774,8 @@ class Hermes(object):
 
     def connect(self):
         """Method for connection to IQ Option API."""
-        global_value.ssl_Mutual_exclusion = False
-        global_value.ssl_mutual_exclusion_write = False
+        self.ssl_mutual_exclusion = False
+        self.ssl_mutual_exclusion_write = False
 
         try:
             self.close()
@@ -779,15 +787,14 @@ class Hermes(object):
         if not check_websocket:
             return check_websocket, websocket_reason
 
-        if global_value.SSID is not None:
-
+        if self.ssid is not None:
             check_ssid = self.send_ssid()
 
             if not check_ssid:
                 response = self.get_ssid()
 
                 try:
-                    global_value.SSID = response.cookies["ssid"]
+                    self.ssid = response.cookies["ssid"]
                 except:
                     return False, response.text
 
@@ -795,12 +802,11 @@ class Hermes(object):
 
                 self.start_websocket()
                 self.send_ssid()
-
         else:
             response = self.get_ssid()
 
             try:
-                global_value.SSID = response.cookies["ssid"]
+                self.ssid = response.cookies["ssid"]
             except:
                 self.close()
                 return False, response.text
@@ -808,7 +814,8 @@ class Hermes(object):
             atexit.register(self.logout)
             self.send_ssid()
 
-        requests.utils.add_dict_to_cookiejar(self.session.cookies, {"ssid": global_value.SSID})
+        requests.utils.add_dict_to_cookiejar(
+            self.session.cookies, {"ssid": self.ssid})
 
         self.time_sync.server_timestamp = None
 

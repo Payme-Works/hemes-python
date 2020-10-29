@@ -14,7 +14,6 @@ from hermes.expiration import get_expiration_time, get_remaning_time
 import hermes.constants as constants
 import hermes.candle_intervals as candle_intervals
 import hermes.countries as countries
-import hermes.global_value as global_value
 
 
 def nested_dict(n, type):
@@ -51,9 +50,6 @@ class StableHermes:
         }
         self.SESSION_COOKIE = {}
 
-        # self.connect()
-        # self.change_balance(balance_mode)
-
     def get_server_timestamp(self):
         return self.api.time_sync.server_timestamp
 
@@ -88,7 +84,6 @@ class StableHermes:
             pass
 
         self.api = Hermes('iqoption.com', self.email, self.password)
-        check = None
 
         if sms_code is not None:
             self.api.set_token_sms(self.resp_sms)
@@ -103,24 +98,26 @@ class StableHermes:
             cookies=self.SESSION_COOKIE
         )
 
-        check, reason = self.api.connect()
+        check, reason_json = self.api.connect()
+
+        if reason_json is not None:
+            reason = json.loads(reason_json)
 
         if check:
             self.resubscribe_stream()
 
-            while global_value.balance_id is None:
+            while self.api.balance_id is None:
                 pass
 
-            self.position_change_all(
-                'subscribeMessage', global_value.balance_id)
+            self.position_change_all('subscribeMessage', self.api.balance_id)
 
             self.order_changed_all('subscribeMessage')
             self.api.set_options(1, True)
 
             return True, None
         else:
-            if json.loads(reason)['code'] == 'verify':
-                response = self.api.send_sms_code(json.loads(reason)['token'])
+            if reason['code'] == 'verify':
+                response = self.api.send_sms_code(reason['token'])
 
                 if response.json()['code'] != 'success':
                     return False, response.json()['message']
@@ -136,7 +133,7 @@ class StableHermes:
 
     @staticmethod
     def check_connect():
-        if global_value.check_websocket_if_connect == 0 or global_value.check_websocket_if_connect is None:
+        if self.api.check_websocket_if_connect == 0 or self.api.check_websocket_if_connect is None:
             return False
         else:
             return True
@@ -367,18 +364,18 @@ class StableHermes:
         balances_raw = self.get_balances()
 
         for balance in balances_raw['msg']:
-            if balance['id'] == global_value.balance_id:
+            if balance['id'] == self.api.balance_id:
                 return balance['currency']
 
     @staticmethod
     def get_balance_id():
-        return global_value.balance_id
+        return self.api.balance_id
 
     def get_balance(self):
 
         balances_raw = self.get_balances()
         for balance in balances_raw['msg']:
-            if balance['id'] == global_value.balance_id:
+            if balance['id'] == self.api.balance_id:
                 return balance['amount']
 
     def get_balances(self):
@@ -397,7 +394,7 @@ class StableHermes:
         profile = self.get_profile_async()
 
         for balance in profile.get('balances'):
-            if balance['id'] == global_value.balance_id:
+            if balance['id'] == self.api.balance_id:
                 if balance['type'] == 1:
                     return 'REAL'
                 elif balance['type'] == 4:
@@ -430,11 +427,11 @@ class StableHermes:
 
     def change_balance(self, balance_mode):
         def set_id(b_id):
-            if global_value.balance_id is not None:
+            if self.api.balance_id is not None:
                 self.position_change_all(
-                    'unsubscribeMessage', global_value.balance_id)
+                    'unsubscribeMessage', self.api.balance_id)
 
-            global_value.balance_id = b_id
+            self.api.balance_id = b_id
 
             self.position_change_all('subscribeMessage', b_id)
 

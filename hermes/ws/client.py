@@ -3,9 +3,10 @@
 import json
 import logging
 import websocket
-import hermes.constants as OP_code
-import hermes.global_value as global_value
+
 from threading import Thread
+
+import hermes.constants as constants
 
 
 class WebsocketClient(object):
@@ -15,11 +16,12 @@ class WebsocketClient(object):
         '''
         :param api: The instance of :class:`Hermes <hermes.api.Hermes>`.
         '''
-
         self.api = api
         self.wss = websocket.WebSocketApp(
-            self.api.wss_url, on_message=self.on_message,
-            on_error=self.on_error, on_close=self.on_close,
+            self.api.wss_url,
+            on_message=self.on_message,
+            on_error=self.on_error,
+            on_close=self.on_close,
             on_open=self.on_open)
 
     def dict_queue_add(self, dict, maxdict, key1, key2, key3, value):
@@ -45,9 +47,10 @@ class WebsocketClient(object):
                 del obj[k]
                 break
 
-    def on_message(self, message):  # pylint: disable=unused-argument
+    def on_message(self, message):
         '''Method to process websocket messages.'''
-        global_value.ssl_Mutual_exclusion = True
+        self.api.ssl_mutual_exclusion = True
+
         logger = logging.getLogger(__name__)
         logger.debug(message)
 
@@ -56,8 +59,8 @@ class WebsocketClient(object):
         if message['name'] == 'timeSync':
             self.api.time_sync.server_timestamp = message['msg']
         elif message['name'] == 'candle-generated':
-            Active_name = list(OP_code.ACTIVES.keys())[list(
-                OP_code.ACTIVES.values()).index(message['msg']['active_id'])]
+            Active_name = list(constants.ACTIVES.keys())[list(
+                constants.ACTIVES.values()).index(message['msg']['active_id'])]
 
             active = str(Active_name)
             size = int(message['msg']['size'])
@@ -72,8 +75,8 @@ class WebsocketClient(object):
         elif message['name'] == 'options':
             self.api.get_options_v2_data = message
         elif message['name'] == 'candles-generated':
-            Active_name = list(OP_code.ACTIVES.keys())[list(
-                OP_code.ACTIVES.values()).index(message['msg']['active_id'])]
+            Active_name = list(constants.ACTIVES.keys())[list(
+                constants.ACTIVES.values()).index(message['msg']['active_id'])]
             active = str(Active_name)
             for k, v in message['msg']['candles'].items():
                 v['active_id'] = message['msg']['active_id']
@@ -93,8 +96,8 @@ class WebsocketClient(object):
         elif message['name'] == 'commission-changed':
             instrument_type = message['msg']['instrument_type']
             active_id = message['msg']['active_id']
-            Active_name = list(OP_code.ACTIVES.keys())[list(
-                OP_code.ACTIVES.values()).index(active_id)]
+            Active_name = list(constants.ACTIVES.keys())[list(
+                constants.ACTIVES.values()).index(active_id)]
             commission = message['msg']['commission']['value']
             self.api.subscribe_commission_changed_data[instrument_type][Active_name][self.api.time_sync.server_timestamp] = int(
                 commission)
@@ -113,10 +116,10 @@ class WebsocketClient(object):
                     self.api.profile.balance = message['msg']['balance']
                 except:
                     pass
-                if global_value.balance_id == None:
+                if self.api.balance_id == None:
                     for balance in message['msg']['balances']:
                         if balance['type'] == 4:
-                            global_value.balance_id = balance['id']
+                            self.api.balance_id = balance['id']
                             break
                 try:
                     self.api.profile.balance_id = message['msg']['balance_id']
@@ -280,8 +283,8 @@ class WebsocketClient(object):
         elif message['name'] == 'result':
             self.api.result = message['msg']['success']
         elif message['name'] == 'instrument-quotes-generated':
-            Active_name = list(OP_code.ACTIVES.keys())[list(
-                OP_code.ACTIVES.values()).index(message['msg']['active'])]
+            Active_name = list(constants.ACTIVES.keys())[list(
+                constants.ACTIVES.values()).index(message['msg']['active'])]
             period = message['msg']['expiration']['period']
             ans = {}
 
@@ -311,8 +314,8 @@ class WebsocketClient(object):
         elif message['name'] == 'live-deal-binary-option-placed':
             name = message['name']
             active_id = message['msg']['active_id']
-            active = list(OP_code.ACTIVES.keys())[
-                list(OP_code.ACTIVES.values()).index(active_id)]
+            active = list(constants.ACTIVES.keys())[
+                list(constants.ACTIVES.values()).index(active_id)]
             _type = message['msg']['option_type']
 
             try:
@@ -332,8 +335,8 @@ class WebsocketClient(object):
         elif message['name'] == 'live-deal-digital-option':
             name = message['name']
             active_id = message['msg']['instrument_active_id']
-            active = list(OP_code.ACTIVES.keys())[
-                list(OP_code.ACTIVES.values()).index(active_id)]
+            active = list(constants.ACTIVES.keys())[
+                list(constants.ACTIVES.values()).index(active_id)]
             _type = message['msg']['expiration_type']
 
             try:
@@ -355,8 +358,8 @@ class WebsocketClient(object):
         elif message['name'] == 'live-deal':
             name = message['name']
             active_id = message['msg']['instrument_active_id']
-            active = list(OP_code.ACTIVES.keys())[
-                list(OP_code.ACTIVES.values()).index(active_id)]
+            active = list(constants.ACTIVES.keys())[
+                list(constants.ACTIVES.values()).index(active_id)]
             _type = message['msg']['instrument_type']
 
             try:
@@ -372,26 +375,27 @@ class WebsocketClient(object):
             self.api.users_availability = message['msg']
         else:
             pass
-        global_value.ssl_Mutual_exclusion = False
 
-    @staticmethod
-    def on_error(wss, error):  # pylint: disable=unused-argument
+        self.api.ssl_mutual_exclusion = False
+
+    def on_error(self):
         '''Method to process websocket errors.'''
         logger = logging.getLogger(__name__)
         logger.error(error)
-        global_value.websocket_error_reason = str(error)
-        global_value.check_websocket_if_error = True
 
-    @staticmethod
-    def on_open(wss):  # pylint: disable=unused-argument
+        self.api.websocket_error_reason = str(error)
+        self.api.check_websocket_if_error = True
+
+    def on_open(self):
         '''Method to process websocket open.'''
         logger = logging.getLogger(__name__)
         logger.debug('Websocket client connected.')
-        global_value.check_websocket_if_connect = 1
 
-    @staticmethod
-    def on_close(wss):  # pylint: disable=unused-argument
+        self.api.check_websocket_if_connect = 1
+
+    def on_close(self):
         '''Method to process websocket close.'''
         logger = logging.getLogger(__name__)
         logger.debug('Websocket connection closed.')
-        global_value.check_websocket_if_connect = 0
+
+        self.api.check_websocket_if_connect = 0

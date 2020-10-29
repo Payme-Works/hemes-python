@@ -1,15 +1,15 @@
 from hermes.ws.channels.base import Base
-import hermes.global_value as global_value
 
 
 class GetOptions(Base):
     name = "api_game_getoptions"
 
-    def __call__(self, limit):
+    def __call__(self, limit, api):
+        self.api = api
 
         data = {
             "limit": int(limit),
-            "user_balance_id": int(global_value.balance_id)
+            "user_balance_id": int(self.api.balance_id)
         }
 
         self.send_websocket_request(self.name, data)
@@ -24,7 +24,7 @@ class GetOptionsV2(Base):
             "body": {
                 "limit": limit,
                 "instrument_type": instrument_type,
-                "user_balance_id": int(global_value.balance_id)
+                "user_balance_id": int(self.api.balance_id)
             }
         }
 

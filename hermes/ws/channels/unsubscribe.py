@@ -2,7 +2,7 @@
 
 import datetime
 from hermes.ws.channels.base import Base
-import hermes.constants as OP_code
+import hermes.constants as constants
 
 
 class Unsubscribe(Base):
@@ -54,7 +54,7 @@ class UnsubscribeInstrumentQuitesGenerated(Base):
             "name": "instrument-quotes-generated",
             "params": {
                 "routingFilters": {
-                    "active": int(OP_code.ACTIVES[ACTIVE]),
+                    "active": int(constants.ACTIVES[ACTIVE]),
                     "expiration_period": int(expiration_period*60),
                     "kind": "digital-option",
                 },

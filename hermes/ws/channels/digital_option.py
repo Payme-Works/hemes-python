@@ -1,6 +1,5 @@
 from random import randint
 from hermes.ws.channels.base import Base
-import hermes.global_value as global_value
 
 
 class DigitalOptionsPlaceDigitalOption(Base):
@@ -14,7 +13,7 @@ class DigitalOptionsPlaceDigitalOption(Base):
             "name": "digital-options.place-digital-option",
             "version": "1.0",
             "body": {
-                "user_balance_id": int(global_value.balance_id),
+                "user_balance_id": int(self.api.balance_id),
                 "instrument_id": str(instrument_id),
                 "amount": str(amount)
             }

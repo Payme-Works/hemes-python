@@ -1,5 +1,4 @@
 from hermes.ws.channels.base import Base
-import hermes.global_value as global_value
 
 
 class GetDeferredOrders(Base):
@@ -10,7 +9,7 @@ class GetDeferredOrders(Base):
             "name": "get-deferred-orders",
             "version": "1.0",
             "body": {
-                    "user_balance_id": int(global_value.balance_id),
+                    "user_balance_id": int(self.api.balance_id),
                     "instrument_type": instrument_type
 
             }
