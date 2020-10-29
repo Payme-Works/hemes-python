@@ -131,8 +131,7 @@ class StableHermes:
     def connect_2fa(self, sms_code):
         return self.connect(sms_code=sms_code)
 
-    @staticmethod
-    def check_connect():
+    def check_connect(self):
         if self.api.check_websocket_if_connect == 0 or self.api.check_websocket_if_connect is None:
             return False
         else:
