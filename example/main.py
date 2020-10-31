@@ -3,6 +3,9 @@ load_dotenv()
 
 import os
 import json
+import time
+
+from datetime import datetime
 
 from hermes.stable_api import StableHermes as Hermes
 
@@ -16,22 +19,21 @@ print(f'Real balance: {real_balance["amount"]}\n')
 
 hermes.change_balance('practice')
 
+active = 'EURUSD'
+
 _, order_id = hermes.buy({
     'type': 'digital',
-    'active': 'EURUSD',
+    'active': active,
     'price_amount': 2,
     'action': 'put',
     'expiration': 1
 })
-print(order_id)
+print(f'Order ID: {order_id}')
 
-# all_open_actives = hermes.get_all_open_actives()
-# print(json.dumps(all_open_actives))
+result = hermes.wait_for_result(order_id, 120)
 
-active = 'EURUSD'
+print(f'Time: {datetime.now().strftime("%H:%M:%S")}')
+print(f'Result: {result}')
 
-order = hermes.wait_for_result(order_id, 120)
-print(order)
-
-trend = hermes.get_trend(active, '5M')
+ trend = hermes.get_trend(active, '5M')
 print(f'\n[{active}] Trend: {trend}')
