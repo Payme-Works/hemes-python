@@ -718,12 +718,15 @@ class StableHermes:
     def wait_for_order_close(self, order_id, timeout=10):
         attempts = 0
 
-        while True and attempts < (timeout * 20):
+        max_attempts = timeout * 100
+        sleep = timeout / 1000
+
+        while True and attempts < max_attempts:
             try:
                 return self.api.closed_options[int(order_id)]
             except:
                 attempts += 1
-                time.sleep(timeout / 200)
+                time.sleep(sleep)
                 pass
 
         return None
@@ -983,19 +986,17 @@ class StableHermes:
         self.api.buy_v3(price_amount, active, action, expiration, req_id)
 
         start_t = time.time()
-        id = None
 
         self.api.result = None
 
-        while self.api.result is None or id is None:
+        order_id = None
+
+        while self.api.result is None or order_id is None:
             try:
+                order_id = self.api.buy_multi_option[req_id]['id']
+
                 if 'message' in self.api.buy_multi_option[req_id].keys():
                     return False, self.api.buy_multi_option[req_id]['message']
-            except:
-                pass
-
-            try:
-                id = self.api.buy_multi_option[req_id]['id']
             except:
                 pass
 
@@ -1003,7 +1004,16 @@ class StableHermes:
                 logging.error('**warning** buy late 5 sec')
                 return False, None
 
-        return self.api.result, self.api.buy_multi_option[req_id]['id']
+        if not isinstance(order_id, int):
+            return False, 'Invalid order id.'
+
+        order = self.api.opened_options.get(order_id)
+
+        while order is None:
+            order = self.api.opened_options.get(order_id)
+            pass
+
+        return self.api.result, order
 
     def sell_option(self, options_id):
         self.api.sell_option(options_id)
@@ -1186,10 +1196,20 @@ class StableHermes:
 
         digital_order_id = self.api.digital_option_placed_id.get(request_id)
 
-        if isinstance(digital_order_id, int):
-            return True, digital_order_id
-        else:
+        if not isinstance(digital_order_id, int):
             return False, digital_order_id
+
+        order = self.api.opened_options.get(digital_order_id)
+
+        while order is None:
+            order = self.api.opened_options.get(digital_order_id)
+            pass
+
+        order['raw_event'].update({
+            'expiration_time': order['raw_event']['instrument_expiration']
+        })
+
+        return True, order
 
     def get_digital_spot_profit_after_sale(self, position_id):
         def get_instrument_id_to_bid(data, instrument_id):

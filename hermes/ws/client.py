@@ -201,8 +201,26 @@ class WebsocketClient(object):
 
                     self.api.closed_options[order_id]['result'] = result
             elif message['microserviceName'] == 'portfolio' and message['msg']['source'] == 'binary-options':
-                self.api.order_async[int(
-                    message['msg']['external_id'])][message['name']] = message
+                order_id = int(message['msg']['external_id'])
+
+                self.api.order_async[order_id][message['name']] = message
+
+                if message['msg']['status'] == 'open':
+                    payload = message['msg']
+                    payload.update({
+                        'order_id': order_id
+                    })
+
+                    self.api.opened_options[order_id] = payload
+        elif message['name'] == 'order-changed':
+            order_id = int(message['msg']['raw_event']['id'])
+
+            payload = message['msg']
+            payload.update({
+                'order_id': order_id
+            })
+
+            self.api.opened_options[order_id] = payload
         elif message['name'] == 'option-opened':
             self.api.order_async[int(
                 message['msg']['option_id'])][message['name']] = message
@@ -278,7 +296,7 @@ class WebsocketClient(object):
             else:
                 self.api.digital_option_placed_id[message['request_id']] = {
                     'code': 'error_place_digital_order',
-                    'message': message['msg']['message']
+                    'error': message['msg']['message']
                 }
         elif message['name'] == 'result':
             self.api.result = message['msg']['success']

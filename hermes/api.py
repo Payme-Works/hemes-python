@@ -91,6 +91,7 @@ class Hermes(object):
     leaderboard_deals_client = None
 
     order_async = nested_dict(2, dict)
+    opened_options = {}
     closed_options = {}
     order_binary = {}
     game_betinfo = GameBetInfoData()
