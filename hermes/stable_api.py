@@ -492,23 +492,33 @@ class StableHermes:
 
         return data
 
-    def get_trend(self, active, interval, amount=100):
+    def get_trend(self, active, interval, amount=50):
         candles = self.get_candles(active, interval, amount)
 
-        count = {
-            'up': 0,
-            'down': 0
-        }
+        # count = {
+        #     'up': 0,
+        #     'down': 0
+        # }
 
-        for candle in candles:
-            direction = candle['direction']
+        # for candle in candles:
+        #     direction = candle['direction']
 
-            if direction == 'up' or direction == 'down':
-                count[direction] = count[direction] + 1
+        #     if direction == 'up' or direction == 'down':
+        #         count[direction] += candle['close']
+
+        # trend = 'up'
+
+        # if count['up'] < count['down']:
+        #     trend = 'down'
+
+        # print(count)
 
         trend = 'up'
 
-        if count['up'] < count['down']:
+        first_candle = candles[0]
+        last_candle = candles[len(candles) - 1]
+
+        if first_candle['close'] > last_candle['close']:
             trend = 'down'
 
         return trend
@@ -1204,6 +1214,10 @@ class StableHermes:
         while order is None:
             order = self.api.opened_options.get(digital_order_id)
             pass
+
+        order.update({
+            'open_quote': order['raw_event']['instrument_strike']
+        })
 
         order['raw_event'].update({
             'expiration_time': order['raw_event']['instrument_expiration']
