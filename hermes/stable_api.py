@@ -492,33 +492,23 @@ class StableHermes:
 
         return data
 
-    def get_trend(self, active, interval, amount=50):
+    def get_trend(self, active, interval, amount=100):
         candles = self.get_candles(active, interval, amount)
 
-        # count = {
-        #     'up': 0,
-        #     'down': 0
-        # }
+        count = {
+            'up': 0,
+            'down': 0
+        }
 
-        # for candle in candles:
-        #     direction = candle['direction']
+        for candle in candles:
+            direction = candle['direction']
 
-        #     if direction == 'up' or direction == 'down':
-        #         count[direction] += candle['close']
-
-        # trend = 'up'
-
-        # if count['up'] < count['down']:
-        #     trend = 'down'
-
-        # print(count)
+            if direction == 'up' or direction == 'down':
+                count[direction] = count[direction] + 1
 
         trend = 'up'
 
-        first_candle = candles[0]
-        last_candle = candles[len(candles) - 1]
-
-        if first_candle['close'] > last_candle['close']:
+        if count['up'] < count['down']:
             trend = 'down'
 
         return trend
@@ -1151,13 +1141,21 @@ class StableHermes:
 
         return -1
 
-    def get_digital_active_profit(self, active, duration):
+    def get_digital_active_profit(self, active, duration, timeout=5):
         self.subscribe_strike_list(active, duration)
+
+        attempts = 0
+
+        max_attempts = timeout * 100
+        sleep = timeout / 1000
 
         profit = self.api.instrument_quites_generated_data[active][duration * 60]
 
-        while len(profit) == 0:
+        while len(profit) == 0 and attempts < max_attempts:
             profit = self.api.instrument_quites_generated_data[active][duration * 60]
+
+            attempts += 1
+            time.sleep(sleep)
             pass
 
         self.unsubscribe_strike_list(active, duration)
