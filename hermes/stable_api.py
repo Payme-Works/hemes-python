@@ -723,7 +723,18 @@ class StableHermes:
 
         while True and attempts < max_attempts:
             try:
-                return self.api.closed_options[int(order_id)]
+                order = self.api.closed_options[int(order_id)]
+
+                if 'win_enrolled_amount' in order:
+                    order.update({
+                        'profit': round(order['win_enrolled_amount'] - order['amount'], 2)
+                    })
+                elif 'pnl' in order:
+                    order.update({
+                        'profit': round(order['pnl'], 2)
+                    })
+
+                return order
             except:
                 attempts += 1
                 time.sleep(sleep)
