@@ -725,9 +725,9 @@ class StableHermes:
             try:
                 order = self.api.closed_options[int(order_id)]
 
-                if 'win_enrolled_amount' in order:
+                if 'profit_amount' in order:
                     order.update({
-                        'profit': round(order['win_enrolled_amount'] - order['amount'], 2)
+                        'profit': round(order['profit_amount'] - order['amount'], 2)
                     })
                 elif 'pnl' in order:
                     order.update({
@@ -1085,7 +1085,9 @@ class StableHermes:
             active, expiration_period)
 
     def unsubscribe_strike_list(self, active, expiration_period):
-        del self.api.instrument_quites_generated_data[active]
+        if self.api.instrument_quites_generated_data.get(active) is not None:
+            del self.api.instrument_quites_generated_data[active]
+
         self.api.unsubscribe_instrument_quites_generated(
             active, expiration_period)
 
