@@ -484,7 +484,7 @@ class StableHermes:
 
         for candle_data in self.api.candles.candles_data:
             candle_data.update({
-                'from': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10 else
+                'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10 else
                         candle_data['from'],
                 'direction': 'equal' if candle_data['close'] == candle_data['open'] else
                              'up' if candle_data['close'] > candle_data['open'] else 'down'
