@@ -484,6 +484,8 @@ class StableHermes:
 
         for candle_data in self.api.candles.candles_data:
             candle_data.update({
+                'from': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10 else
+                        candle_data['from'],
                 'direction': 'equal' if candle_data['close'] == candle_data['open'] else
                              'up' if candle_data['close'] > candle_data['open'] else 'down'
             })
@@ -725,9 +727,9 @@ class StableHermes:
             try:
                 order = self.api.closed_options[int(order_id)]
 
-                if 'profit_amount' in order:
+                if 'win_enrolled_amount' in order:
                     order.update({
-                        'profit': round(order['profit_amount'] - order['amount'], 2)
+                        'profit': round(order['win_enrolled_amount'] - order['amount'], 2)
                     })
                 elif 'pnl' in order:
                     order.update({
@@ -1085,9 +1087,7 @@ class StableHermes:
             active, expiration_period)
 
     def unsubscribe_strike_list(self, active, expiration_period):
-        if self.api.instrument_quites_generated_data.get(active) is not None:
-            del self.api.instrument_quites_generated_data[active]
-
+        del self.api.instrument_quites_generated_data[active]
         self.api.unsubscribe_instrument_quites_generated(
             active, expiration_period)
 

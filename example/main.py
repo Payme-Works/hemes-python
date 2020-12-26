@@ -19,7 +19,7 @@ print(f'Real balance: {real_balance["amount"]}\n')
 
 hermes.change_balance('practice')
 
-active = 'EURUSD'
+active = 'EURUSD-OTC'
 
 # hermes.start_candles_stream(active, 60, 20)
 
@@ -51,5 +51,5 @@ active = 'EURUSD'
 # print(f'Time: {datetime.now().strftime("%H:%M:%S")}')
 # print(f'Result: {result}')
 
-trend = hermes.get_trend(active, '5M')
-print(f'\n[{active}] Trend: {trend}')
+candles = hermes.get_candles(active, '5M', 1)
+print(f'\n[{active}] Last 5M candle: {candles[0]}')
