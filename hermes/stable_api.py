@@ -487,8 +487,8 @@ class StableHermes:
             candle_data.update({
                 'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10
                 else candle_data['from'],
-                'close_at': int(str(candle_data['close']) + '000') if len(str(candle_data['close'])) == 10
-                else candle_data['close'],
+                'close_at': int(str(candle_data['to']) + '000') if len(str(candle_data['to'])) == 10
+                else candle_data['to'],
                 'direction': 'equal' if candle_data['close'] == candle_data['open'] else
                              'up' if candle_data['close'] > candle_data['open'] else 'down'
             })
@@ -562,8 +562,8 @@ class StableHermes:
                     candle_data.update({
                         'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10
                         else candle_data['from'],
-                        'close_at': int(str(candle_data['close']) + '000') if len(str(candle_data['close'])) == 10
-                        else candle_data['close'],
+                        'close_at': int(str(candle_data['to']) + '000') if len(str(candle_data['to'])) == 10
+                        else candle_data['to'],
                         'direction': 'equal' if candle_data['close'] == candle_data['open'] else
                         'up' if candle_data['close'] > candle_data['open'] else 'down'
                     })
