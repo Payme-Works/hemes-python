@@ -2,6 +2,7 @@ import time
 import json
 import logging
 import operator
+import traceback
 
 from collections import defaultdict
 from collections import deque
@@ -485,7 +486,7 @@ class StableHermes:
         for candle_data in self.api.candles.candles_data:
             candle_data.update({
                 'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10 else
-                        candle_data['from'],
+                candle_data['from'],
                 'direction': 'equal' if candle_data['close'] == candle_data['open'] else
                              'up' if candle_data['close'] > candle_data['open'] else 'down'
             })
@@ -549,7 +550,23 @@ class StableHermes:
                 return False
         elif size in self.size:
             try:
-                return self.api.real_time_candles[active][size]
+                data = []
+
+                candles_timestamps = self.api.real_time_candles[active][size]
+
+                for timestamp in list(candles_timestamps):
+                    candle_data = candles_timestamps[timestamp]
+
+                    candle_data.update({
+                        'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10 else
+                        candle_data['from'],
+                        'direction': 'equal' if candle_data['close'] == candle_data['open'] else
+                        'up' if candle_data['close'] > candle_data['open'] else 'down'
+                    })
+
+                    data.append(candle_data)
+
+                return data
             except:
                 logging.error(
                     '**error** get_realtime_candles() size=' + str(size) + ' can not get candle')
