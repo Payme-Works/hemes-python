@@ -485,8 +485,10 @@ class StableHermes:
 
         for candle_data in self.api.candles.candles_data:
             candle_data.update({
-                'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10 else
-                candle_data['from'],
+                'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10
+                else candle_data['from'],
+                'close_at': int(str(candle_data['close']) + '000') if len(str(candle_data['close'])) == 10
+                else candle_data['close'],
                 'direction': 'equal' if candle_data['close'] == candle_data['open'] else
                              'up' if candle_data['close'] > candle_data['open'] else 'down'
             })
@@ -558,8 +560,10 @@ class StableHermes:
                     candle_data = candles_timestamps[timestamp]
 
                     candle_data.update({
-                        'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10 else
-                        candle_data['from'],
+                        'open_at': int(str(candle_data['from']) + '000') if len(str(candle_data['from'])) == 10
+                        else candle_data['from'],
+                        'close_at': int(str(candle_data['close']) + '000') if len(str(candle_data['close'])) == 10
+                        else candle_data['close'],
                         'direction': 'equal' if candle_data['close'] == candle_data['open'] else
                         'up' if candle_data['close'] > candle_data['open'] else 'down'
                     })
